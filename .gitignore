@@ -1,0 +1,25 @@
+# ===== .NET =====
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# ===== Angular / Node =====
+node_modules/
+dist/
+.angular/
+
+# ===== Variables de entorno =====
+.env
+
+# ===== Docker =====
+# (postgres_data es un volumen de Docker, no una carpeta local, así que no necesita entrada aquí)
+
+# ===== Editor =====
+.vscode/*
+!.vscode/extensions.json
+
+# ===== Sistema operativo =====
+.DS_Store
+Thumbs.db
