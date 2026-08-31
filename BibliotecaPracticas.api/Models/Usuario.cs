@@ -21,6 +21,7 @@ namespace BibliotecaPracticas.api.Models
 
         // Relación: un usuario puede subir varios libros
         public ICollection<Libro>? Libros { get; set; }
+        public bool Activo { get; set; } = true;
     }
 
     public enum RolUsuario

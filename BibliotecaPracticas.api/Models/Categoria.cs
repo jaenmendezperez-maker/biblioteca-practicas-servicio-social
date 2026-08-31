@@ -10,5 +10,6 @@ namespace BibliotecaPracticas.api.Models
         public string Nombre { get; set; } = string.Empty; // Ej: "Ingeniería en Sistemas"
 
         public ICollection<Libro>? Libros { get; set; }
+        public bool Activo { get; set; } = true;
     }
 }

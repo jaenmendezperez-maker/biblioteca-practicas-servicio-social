@@ -16,18 +16,23 @@ namespace BibliotecaPracticas.api.Models
         public string? Descripcion { get; set; }
 
         [Required]
-        public string RutaArchivo { get; set; } = string.Empty; // ruta del PDF guardado
+        public string RutaArchivo { get; set; } = string.Empty;
+
+        public string? RutaPortada { get; set; }
+
+        public string? PaginasPreview { get; set; }
+
+        public bool Activo { get; set; } = true;
 
         public DateTime FechaSubida { get; set; } = DateTime.UtcNow;
 
-        // Relación con Categoria
         public int CategoriaId { get; set; }
         [ForeignKey(nameof(CategoriaId))]
         public Categoria? Categoria { get; set; }
 
-        // Relación con Usuario (quién lo subió)
         public int UsuarioId { get; set; }
         [ForeignKey(nameof(UsuarioId))]
         public Usuario? Usuario { get; set; }
+        public string? TablaContenido { get; set; } // JSON con array de {titulo, pagina}
     }
 }
