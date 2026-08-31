@@ -1,0 +1,65 @@
+<div class="min-h-screen bg-crema flex items-center justify-center px-4 font-sans">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 rounded-full bg-marino-700 flex items-center justify-center text-white font-display font-bold text-xl mx-auto mb-4 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20"
+             style="background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 1px, transparent 6px);">
+        </div>
+        <span class="relative">BP</span>
+      </div>
+      <h1 class="font-display text-2xl font-semibold text-marino-900">Biblioteca de Prácticas</h1>
+      <p class="text-sm text-marino-400 mt-1">Inicia sesión para continuar</p>
+    </div>
+
+    <div *ngIf="mensajeSesionExpirada" class="bg-ambar-500/10 text-ambar-700 text-sm rounded-lg px-3 py-2 mb-4">
+      Tu sesión expiró. Inicia sesión de nuevo para continuar.
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="bg-white rounded-xl shadow-sm border border-marino-100 p-6 flex flex-col gap-4">
+
+      <div *ngIf="error" class="bg-red-50 text-red-600 text-sm rounded-lg px-3 py-2">
+        {{ error }}
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-marino-700">Correo electrónico</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          placeholder="tucorreo@ejemplo.com"
+          class="w-full border border-marino-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-marino-700">Contraseña</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          placeholder="••••••••"
+          class="w-full border border-marino-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent"
+        />
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="cargando"
+        class="w-full bg-marino-700 text-white font-medium py-2.5 rounded-lg hover:bg-marino-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+      >
+        {{ cargando ? 'Ingresando...' : 'Iniciar sesión' }}
+      </button>
+
+      <a routerLink="/" class="text-center text-sm text-marino-400 hover:text-marino-700 transition-colors mt-1">
+        ← Volver al catálogo
+      </a>
+      <p class="text-center text-sm text-marino-400">
+        ¿No tienes cuenta?
+        <a routerLink="/registro" class="text-ambar-600 font-medium hover:text-ambar-700">Regístrate</a>
+      </p>
+    </form>
+  </div>
+</div>

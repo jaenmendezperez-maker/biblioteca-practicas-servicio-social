@@ -1,0 +1,344 @@
+<div class="min-h-screen bg-crema font-sans flex">
+
+  <app-sidebar></app-sidebar>
+
+  <main class="flex-1 md:ml-72 px-6 md:px-10 py-10">
+    <div class="max-w-5xl mx-auto">
+
+      <button
+        (click)="sidebarService.toggle()"
+        class="md:hidden text-marino-700 p-2 -ml-2 mb-4"
+      >
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+
+      <p class="text-xs font-semibold text-ambar-600 uppercase tracking-[0.15em] mb-2">
+        Administración
+      </p>
+      <h1 class="font-display text-3xl font-semibold text-marino-900 mb-6">
+        Panel de gestión
+      </h1>
+
+      <div *ngIf="error" class="bg-red-50 text-red-600 text-sm rounded-lg px-4 py-3 mb-4">
+        {{ error }}
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-marino-100 mb-6">
+        <button
+          (click)="cambiarTab('categorias')"
+          class="px-5 py-3 text-sm font-semibold border-b-2 transition-colors"
+          [ngClass]="tabActiva === 'categorias' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
+        >
+          Categorías
+        </button>
+        <button
+          (click)="cambiarTab('libros')"
+          class="px-5 py-3 text-sm font-semibold border-b-2 transition-colors"
+          [ngClass]="tabActiva === 'libros' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
+        >
+          Libros
+        </button>
+        <button
+          (click)="cambiarTab('usuarios')"
+          class="px-5 py-3 text-sm font-semibold border-b-2 transition-colors"
+          [ngClass]="tabActiva === 'usuarios' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
+          >
+          Usuarios
+        </button>
+      </div>
+
+      <div *ngIf="cargando" class="flex justify-center py-16 text-marino-400">
+        <div class="w-8 h-8 border-4 border-marino-100 border-t-ambar-500 rounded-full animate-spin"></div>
+      </div>
+
+      <!-- ===== TAB CATEGORÍAS ===== -->
+      <div *ngIf="!cargando && tabActiva === 'categorias'">
+
+        <!-- Crear nueva -->
+        <div class="bg-white rounded-xl border border-marino-100 p-4 mb-4 flex gap-2">
+          <input
+            type="text"
+            [(ngModel)]="nombreNuevaCategoria"
+            placeholder="Nombre de la nueva categoría"
+            class="flex-1 border border-marino-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+          />
+          <button
+            (click)="crearCategoria()"
+            class="bg-marino-700 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-marino-600 transition-colors flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            Crear
+          </button>
+        </div>
+
+        <!-- Lista -->
+        <div class="bg-white rounded-xl border border-marino-100 divide-y divide-marino-50 overflow-hidden">
+          <div
+            *ngFor="let cat of categorias"
+            class="flex items-center justify-between gap-3 px-4 py-3"
+          >
+            <ng-container *ngIf="categoriaEditandoId !== cat.id; else editandoCategoria">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <span
+                  class="w-2 h-2 rounded-full shrink-0"
+                  [ngClass]="cat.activo ? 'bg-emerald-500' : 'bg-marino-200'"
+                ></span>
+                <span class="text-sm font-medium truncate" [ngClass]="cat.activo ? 'text-marino-900' : 'text-marino-300 line-through'">
+                  {{ cat.nombre }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-1 shrink-0">
+                <button
+                  (click)="iniciarEdicionCategoria(cat)"
+                  class="p-2 text-marino-400 hover:text-marino-700 hover:bg-marino-50 rounded-lg transition-colors"
+                  title="Editar"
+                >
+                  <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
+                <button
+                  (click)="pedirConfirmacionCategoria(cat)"
+                  class="p-2 rounded-lg transition-colors"
+                  [ngClass]="cat.activo ? 'text-marino-400 hover:text-red-500 hover:bg-red-50' : 'text-marino-400 hover:text-emerald-600 hover:bg-emerald-50'"
+                  [title]="cat.activo ? 'Dar de baja' : 'Reactivar'"
+                >
+                  <span class="material-symbols-outlined text-[18px]">
+                    {{ cat.activo ? 'visibility_off' : 'visibility' }}
+                  </span>
+                </button>
+              </div>
+            </ng-container>
+
+            <ng-template #editandoCategoria>
+              <div class="flex items-center gap-2 flex-1">
+                <input
+                  type="text"
+                  [(ngModel)]="nombreEditado"
+                  class="flex-1 border border-marino-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+                />
+                <button (click)="guardarEdicionCategoria(cat)" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg">
+                  <span class="material-symbols-outlined text-[18px]">check</span>
+                </button>
+                <button (click)="cancelarEdicionCategoria()" class="p-1.5 text-marino-400 hover:bg-marino-50 rounded-lg">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+            </ng-template>
+          </div>
+
+          <div *ngIf="categorias.length === 0" class="px-4 py-8 text-center text-sm text-marino-300">
+            No hay categorías todavía.
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB USUARIOS ===== -->
+      <div *ngIf="!cargando && tabActiva === 'usuarios'">
+
+        <div class="bg-white rounded-xl border border-marino-100 divide-y divide-marino-50 overflow-hidden">
+          <div *ngFor="let usuario of usuarios" class="flex items-center justify-between gap-3 px-4 py-3">
+
+            <div class="flex items-center gap-3 min-w-0">
+              <span
+                class="w-2 h-2 rounded-full shrink-0"
+                [ngClass]="usuario.activo ? 'bg-emerald-500' : 'bg-marino-200'"
+              ></span>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold truncate" [ngClass]="usuario.activo ? 'text-marino-900' : 'text-marino-300 line-through'">
+                  {{ usuario.nombreCompleto }}
+                  <span *ngIf="esUsuarioActual(usuario)" class="text-xs font-normal text-ambar-600 ml-1">(tú)</span>
+                </p>
+                <p class="text-xs text-marino-400 truncate">{{ usuario.email }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <select
+                [ngModel]="usuario.rol"
+                (ngModelChange)="cambiarRolUsuario(usuario, $event)"
+                [disabled]="esUsuarioActual(usuario)"
+                class="text-xs border border-marino-100 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-ambar-500 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option [ngValue]="0">Admin</option>
+                <option [ngValue]="1">Docente</option>
+                <option [ngValue]="2">Alumno</option>
+              </select>
+
+              <button
+                (click)="pedirConfirmacionUsuario(usuario)"
+                [disabled]="esUsuarioActual(usuario)"
+                class="p-2 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                [ngClass]="usuario.activo ? 'text-marino-400 hover:text-red-500 hover:bg-red-50' : 'text-marino-400 hover:text-emerald-600 hover:bg-emerald-50'"
+                [title]="esUsuarioActual(usuario) ? 'No puedes desactivarte a ti mismo' : (usuario.activo ? 'Dar de baja' : 'Reactivar')"
+              >
+                <span class="material-symbols-outlined text-[18px]">
+                  {{ usuario.activo ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="usuarios.length === 0" class="px-4 py-8 text-center text-sm text-marino-300">
+            No hay usuarios registrados.
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB LIBROS ===== -->
+      <div *ngIf="!cargando && tabActiva === 'libros'">
+        <div class="flex items-center justify-end mb-4">
+          <button
+            (click)="reprocesarLibrosAntiguos()"
+            [disabled]="reprocesando"
+            class="text-sm font-medium text-ambar-600 hover:text-ambar-700 flex items-center gap-2 disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-[18px]">refresh</span>
+            {{ reprocesando ? 'Reprocesando ' + progresoReproceso.actual + '/' + progresoReproceso.total + '...' : 'Reprocesar libros antiguos (portadas/índice)' }}
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border border-marino-100 divide-y divide-marino-50 overflow-hidden">
+          <div *ngFor="let libro of libros" class="p-4">
+
+            <ng-container *ngIf="libroEditando?.id !== libro.id; else editandoLibro">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  <span
+                    class="w-2 h-2 rounded-full shrink-0"
+                    [ngClass]="libro.activo ? 'bg-emerald-500' : 'bg-marino-200'"
+                  ></span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold truncate" [ngClass]="libro.activo ? 'text-marino-900' : 'text-marino-300 line-through'">
+                      {{ libro.titulo }}
+                    </p>
+                    <p class="text-xs text-marino-400 truncate">
+                      {{ libro.autor || 'Sin autor' }} · {{ libro.categoriaNombre || 'Sin categoría' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    (click)="iniciarEdicionLibro(libro)"
+                    class="p-2 text-marino-400 hover:text-marino-700 hover:bg-marino-50 rounded-lg transition-colors"
+                    title="Editar"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                  <button
+                    (click)="pedirConfirmacionLibro(libro)"
+                    class="p-2 rounded-lg transition-colors"
+                    [ngClass]="libro.activo ? 'text-marino-400 hover:text-red-500 hover:bg-red-50' : 'text-marino-400 hover:text-emerald-600 hover:bg-emerald-50'"
+                    [title]="libro.activo ? 'Dar de baja' : 'Reactivar'"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">
+                      {{ libro.activo ? 'visibility_off' : 'visibility' }}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-template #editandoLibro>
+              <div class="flex flex-col gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    [(ngModel)]="formEdicionLibro.titulo"
+                    placeholder="Título"
+                    class="border border-marino-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+                  />
+                  <input
+                    type="text"
+                    [(ngModel)]="formEdicionLibro.autor"
+                    placeholder="Autor"
+                    class="border border-marino-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+                  />
+                  <select
+                    [(ngModel)]="formEdicionLibro.categoriaId"
+                    class="border border-marino-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500 bg-white"
+                  >
+                    <option *ngFor="let cat of categorias" [ngValue]="cat.id">{{ cat.nombre }}</option>
+                  </select>
+                  <textarea
+                    [(ngModel)]="formEdicionLibro.descripcion"
+                    placeholder="Descripción"
+                    rows="1"
+                    class="border border-marino-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500 resize-none md:col-span-2"
+                  ></textarea>
+                </div>
+                <div class="flex gap-2 justify-end">
+                  <button (click)="cancelarEdicionLibro()" class="text-sm text-marino-400 px-3 py-1.5 hover:text-marino-700">
+                    Cancelar
+                  </button>
+                  <button (click)="guardarEdicionLibro()" class="bg-marino-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-marino-600 transition-colors">
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+
+          <div *ngIf="libros.length === 0" class="px-4 py-8 text-center text-sm text-marino-300">
+            No hay libros todavía.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal de confirmación -->
+  <div
+    *ngIf="accionPendiente"
+    class="fixed inset-0 bg-marino-900/40 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+    (click)="cancelarAccion()"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center gap-3 mb-4">
+        <div
+          class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+          [ngClass]="accionPendiente.nuevoEstado ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'"
+        >
+          <span class="material-symbols-outlined">
+            {{ accionPendiente.nuevoEstado ? 'visibility' : 'visibility_off' }}
+          </span>
+        </div>
+        <h3 class="font-display text-lg font-semibold text-marino-900">
+          {{ accionPendiente.nuevoEstado ? 'Reactivar' : 'Dar de baja' }}
+        </h3>
+      </div>
+
+      <p class="text-sm text-marino-600 mb-6">
+        ¿Seguro que quieres
+        {{ accionPendiente.nuevoEstado ? 'reactivar' : 'dar de baja a' }}
+        <span class="font-semibold text-marino-900">"{{ accionPendiente.nombre }}"</span>?
+        <span *ngIf="!accionPendiente.nuevoEstado && accionPendiente.tipo !== 'usuario'">
+          Dejará de aparecer en el catálogo público, pero podrás reactivarlo después.
+        </span>
+        <span *ngIf="!accionPendiente.nuevoEstado && accionPendiente.tipo === 'usuario'">
+          No podrá iniciar sesión mientras esté dado de baja, pero podrás reactivarlo después.
+        </span>
+      </p>
+
+      <div class="flex gap-2 justify-end">
+        <button
+          (click)="cancelarAccion()"
+          class="text-sm text-marino-500 px-4 py-2 rounded-lg hover:bg-marino-50 transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmarAccion()"
+          class="text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors"
+          [ngClass]="accionPendiente.nuevoEstado ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'"
+        >
+          {{ accionPendiente.nuevoEstado ? 'Sí, reactivar' : 'Sí, dar de baja' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

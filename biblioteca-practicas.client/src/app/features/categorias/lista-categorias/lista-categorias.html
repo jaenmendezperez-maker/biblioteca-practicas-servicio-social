@@ -1,0 +1,72 @@
+<div class="min-h-screen bg-crema font-sans flex">
+  <app-sidebar></app-sidebar>
+
+  <main class="flex-1 md:ml-72 flex flex-col min-h-screen">
+
+    <!-- Header, igual patrón que "Todos los libros" -->
+    <header class="bg-crema/90 backdrop-blur-md border-b border-marino-100 sticky top-0 z-40">
+      <div class="flex justify-between items-center w-full px-4 md:px-8 max-w-7xl mx-auto h-16 gap-3">
+        <button
+          (click)="sidebarService.toggle()"
+          class="md:hidden text-marino-700 p-2 -ml-2"
+        >
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <span class="text-lg md:text-xl font-display font-bold text-marino-700 tracking-tight truncate">
+          Categorías
+        </span>
+
+        <div class="flex-1 max-w-md mx-8 relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-marino-400 text-[20px]">
+            search
+          </span>
+          <input
+            type="text"
+            [(ngModel)]="textoBusqueda"
+            placeholder="Buscar categoría..."
+            class="w-full bg-white rounded py-3 pl-11 pr-4 text-sm text-marino-900 placeholder-marino-400/60 border border-marino-100 focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent transition-shadow"
+          />
+        </div>
+
+        <span class="text-xs text-marino-400 font-medium hidden lg:block whitespace-nowrap">
+          {{ categorias.length }} categoría{{ categorias.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+    </header>
+
+    <div class="flex-1 px-6 md:px-10 pt-8 pb-10 max-w-7xl mx-auto w-full">
+
+      <div class="flex items-end justify-between mb-6 border-b border-marino-100 pb-3">
+        <h1 class="font-display text-2xl font-semibold text-marino-900">Todas las categorías</h1>
+        <span class="text-sm text-marino-400">{{ categoriasFiltradas.length }} resultado(s)</span>
+      </div>
+
+      <div *ngIf="cargando" class="flex justify-center py-16">
+        <div class="w-8 h-8 border-4 border-marino-100 border-t-ambar-500 rounded-full animate-spin"></div>
+      </div>
+
+      <div *ngIf="!cargando" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <button
+          *ngFor="let cat of categoriasFiltradas"
+          (click)="irACategoria(cat.id)"
+          class="bg-white border border-marino-100 rounded p-5 text-left hover:shadow-md hover:border-ambar-400 transition-all flex items-start gap-4"
+        >
+          <div class="w-11 h-11 rounded-lg bg-marino-50 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-marino-700">folder</span>
+          </div>
+          <div class="min-w-0">
+            <h3 class="font-display font-semibold text-marino-900 leading-tight">{{ cat.nombre }}</h3>
+            <p class="text-xs text-marino-400 mt-1">
+              {{ contarLibros(cat.id) }} libro{{ contarLibros(cat.id) !== 1 ? 's' : '' }}
+            </p>
+          </div>
+        </button>
+
+        <div *ngIf="categoriasFiltradas.length === 0" class="col-span-full text-center py-16">
+          <span class="material-symbols-outlined text-5xl text-marino-200 mb-3 block">inbox</span>
+          <p class="text-sm text-marino-400">No se encontraron categorías.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,75 @@
+<div class="min-h-screen bg-crema flex items-center justify-center px-4 font-sans">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 rounded-full bg-marino-700 flex items-center justify-center text-white font-display font-bold text-xl mx-auto mb-4">
+        BP
+      </div>
+      <h1 class="font-display text-2xl font-semibold text-marino-900">Crear cuenta</h1>
+      <p class="text-sm text-marino-400 mt-1">Únete a la Biblioteca de Prácticas</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="bg-white rounded-xl shadow-sm border border-marino-100 p-6 flex flex-col gap-4">
+
+      <div *ngIf="error" class="bg-red-50 text-red-600 text-sm rounded-lg px-3 py-2">
+        {{ error }}
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-marino-700">Nombre completo</label>
+        <input
+          type="text"
+          [(ngModel)]="nombreCompleto"
+          name="nombreCompleto"
+          placeholder="Tu nombre"
+          class="w-full border border-marino-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-marino-700">Correo electrónico</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="tucorreo@ejemplo.com"
+          class="w-full border border-marino-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-marino-700">Contraseña</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Mínimo 6 caracteres"
+          class="w-full border border-marino-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-marino-700">Confirmar contraseña</label>
+        <input
+          type="password"
+          [(ngModel)]="confirmarPassword"
+          name="confirmarPassword"
+          placeholder="Repite tu contraseña"
+          class="w-full border border-marino-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ambar-500"
+        />
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="cargando"
+        class="w-full bg-marino-700 text-white font-medium py-2.5 rounded-lg hover:bg-marino-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+      >
+        {{ cargando ? 'Creando cuenta...' : 'Crear cuenta' }}
+      </button>
+
+      <p class="text-center text-sm text-marino-400 mt-1">
+        ¿Ya tienes cuenta?
+        <a routerLink="/login" class="text-ambar-600 font-medium hover:text-ambar-700">Inicia sesión</a>
+      </p>
+    </form>
+  </div>
+</div>

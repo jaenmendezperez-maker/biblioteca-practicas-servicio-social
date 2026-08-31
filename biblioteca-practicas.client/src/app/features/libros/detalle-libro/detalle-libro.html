@@ -1,0 +1,319 @@
+<div class="min-h-screen bg-crema font-sans flex">
+
+  <app-sidebar></app-sidebar>
+
+  <div class="flex-1 md:ml-72">
+
+    <!-- Header -->
+    <header class="bg-crema/90 backdrop-blur-xl sticky top-0 z-40 border-b border-marino-100">
+      <div class="max-w-6xl mx-auto px-4 md:px-10 h-16 flex items-center justify-between gap-4">
+        <button
+          (click)="sidebarService.toggle()"
+          class="md:hidden text-marino-700 p-2 -ml-2"
+        >
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+
+        <a routerLink="/" class="flex items-center gap-2 text-marino-400 hover:text-marino-700 transition-colors text-sm font-medium shrink-0">
+          <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+          Volver
+        </a>
+
+        <div class="relative flex-1 max-w-md hidden sm:block">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-marino-400 text-[20px]">search</span>
+          <input
+            type="text"
+            placeholder="Buscar otro libro..."
+            class="w-full bg-white border border-marino-100 rounded-full py-2.5 pl-11 pr-4 text-sm text-marino-900 placeholder-marino-400/60 focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent transition-shadow"
+          />
+        </div>
+
+        <div
+          *ngIf="authService.estaAutenticado()"
+          class="w-9 h-9 rounded-full bg-ambar-500 text-marino-900 flex items-center justify-center font-display font-semibold text-sm shrink-0"
+        >
+          {{ authService.usuarioActual()?.nombreCompleto?.charAt(0) }}
+        </div>
+      </div>
+    </header>
+
+    <!-- Cargando -->
+    <div *ngIf="cargando" class="flex flex-col items-center justify-center py-24 text-marino-400">
+      <div class="w-8 h-8 border-4 border-marino-100 border-t-ambar-500 rounded-full animate-spin mb-4"></div>
+      <p>Cargando libro...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="flex flex-col items-center justify-center py-24 text-red-600">
+      <span class="material-symbols-outlined text-4xl mb-2">error</span>
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Contenido -->
+    <main *ngIf="!cargando && !error && libro" class="max-w-6xl mx-auto px-6 md:px-10 py-12">
+
+      <!-- Hero -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16">
+
+        <!-- Portada -->
+        <div class="lg:col-span-4 flex justify-center lg:justify-start">
+          <div class="relative rounded-xl overflow-hidden shadow-[0_20px_40px_rgba(18,38,71,0.12)] border border-marino-100 bg-white aspect-[2/3] w-full max-w-sm group hover:scale-[1.02] transition-transform duration-300">
+            <div
+              class="w-full h-full flex items-center justify-center relative"
+              [ngClass]="!libro.rutaPortada ? colorPortada(libro.id) : ''"
+            >
+              <img
+                *ngIf="libro.rutaPortada"
+                [src]="urlArchivo(libro.rutaPortada)"
+                [alt]="libro.titulo"
+                class="w-full h-full object-cover"
+              />
+              <ng-container *ngIf="!libro.rutaPortada">
+                <div class="absolute inset-0 opacity-[0.08]"
+                    style="background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 1px, transparent 12px);">
+                </div>
+                <span class="relative font-display text-6xl font-semibold text-white/95 select-none">
+                  {{ iniciales(libro.titulo) }}
+                </span>
+              </ng-container>
+            </div>
+
+            <!-- Hover: Vista previa (abre modal, no el PDF completo) -->
+            <button
+              (click)="abrirVistaPrevia()"
+              class="absolute inset-0 bg-gradient-to-t from-marino-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4"
+            >
+              <span class="w-full bg-white text-marino-900 text-sm font-semibold py-2 rounded shadow-sm hover:bg-marino-50 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">zoom_in</span> Vista previa
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metadata -->
+        <div class="lg:col-span-8 flex flex-col justify-center">
+          <div class="flex items-center gap-3 mb-4" *ngIf="libro.categoriaNombre">
+            <span class="bg-marino-50 text-marino-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-bold">
+              {{ libro.categoriaNombre }}
+            </span>
+            <span class="bg-ambar-500/15 text-ambar-600 text-xs px-3 py-1 rounded-full font-semibold">
+              {{ libro.fechaSubida | date:'MMMM yyyy' }}
+            </span>
+          </div>
+
+          <h1 class="font-display text-4xl md:text-5xl font-semibold text-marino-900 tracking-tight leading-[1.1] mb-3">
+            {{ libro.titulo }}
+          </h1>
+
+          <p class="text-lg text-marino-400 font-normal mb-6" *ngIf="libro.autor">
+            Por {{ libro.autor }}
+          </p>
+
+          <div class="flex flex-wrap items-center gap-x-8 gap-y-3 mb-8 text-sm text-marino-400">
+            <div class="flex items-center gap-2" *ngIf="libro.autor">
+              <span class="material-symbols-outlined text-marino-300 text-[20px]">person</span>
+              <span>{{ libro.autor }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-marino-300 text-[20px]">calendar_today</span>
+              <span>Subido el {{ libro.fechaSubida | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3 mt-auto">
+            <a
+              [href]="urlArchivo(libro.rutaArchivo)"
+              target="_blank"
+              class="bg-marino-700 text-white text-sm font-semibold px-7 py-3 rounded-lg shadow-sm hover:bg-marino-600 transition-all active:scale-95 flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[20px]">menu_book</span>
+              Ver en línea
+            </a>
+            <button
+              (click)="descargarPdf()"
+              class="bg-transparent border border-ambar-500 text-ambar-600 text-sm font-semibold px-7 py-3 rounded-lg hover:bg-ambar-500/10 transition-all active:scale-95 flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[20px]">download</span>
+              Descargar PDF
+            </button>
+            <button
+              class="bg-marino-50 text-marino-700 w-12 h-12 rounded-lg hover:bg-marino-100 transition-all active:scale-95 flex items-center justify-center shadow-sm"
+              title="Guardar (próximamente)"
+            >
+              <span class="material-symbols-outlined">bookmark_add</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cuerpo: tabs + panel lateral -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+
+        <!-- Tabs -->
+        <div class="lg:col-span-8">
+          <div class="flex border-b border-marino-100 mb-6 overflow-x-auto">
+            <button
+              (click)="cambiarTab('sinopsis')"
+              class="px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors"
+              [ngClass]="tabActiva === 'sinopsis' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
+            >
+              Sinopsis
+            </button>
+            <button
+              (click)="cambiarTab('contenido')"
+              class="px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors"
+              [ngClass]="tabActiva === 'contenido' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
+            >
+              Tabla de contenido
+            </button>
+            <button
+              (click)="cambiarTab('citas')"
+              class="px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors"
+              [ngClass]="tabActiva === 'citas' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
+            >
+              Citar este libro
+            </button>
+          </div>
+
+          <!-- Tab: Sinopsis -->
+          <div *ngIf="tabActiva === 'sinopsis'" class="text-marino-600/90 text-base leading-relaxed">
+            <p *ngIf="libro.descripcion">{{ libro.descripcion }}</p>
+            <p class="text-sm text-marino-400 italic" *ngIf="!libro.descripcion">
+              Este libro no tiene descripción disponible.
+            </p>
+          </div>
+
+          <!-- Tab: Tabla de contenido -->
+          <div *ngIf="tabActiva === 'contenido'">
+            <ul *ngIf="libro.tablaContenido?.length" class="bg-white rounded-xl border border-marino-100 divide-y divide-marino-50">
+              <li
+                *ngFor="let item of libro.tablaContenido"
+                class="flex items-center justify-between px-4 py-3 text-sm"
+              >
+                <span class="text-marino-700">{{ item.titulo }}</span>
+                <span class="text-marino-400 shrink-0 ml-4" *ngIf="item.pagina">Pág. {{ item.pagina }}</span>
+              </li>
+            </ul>
+
+            <div *ngIf="!libro.tablaContenido?.length" class="flex flex-col items-center justify-center py-16 text-marino-300 bg-white rounded-xl border border-dashed border-marino-100">
+              <span class="material-symbols-outlined text-4xl mb-2">construction</span>
+              <p class="text-sm">La tabla de contenido aún no está disponible para este libro.</p>
+            </div>
+          </div>
+
+          <!-- Tab: Citar -->
+          <div *ngIf="tabActiva === 'citas'">
+            <h3 class="text-sm font-semibold text-marino-800 mb-2">Cita sugerida</h3>
+            <div class="bg-white p-4 rounded-lg border border-marino-100 text-sm font-mono text-marino-700 relative group">
+              {{ libro.autor || 'Autor desconocido' }}. <em>{{ libro.titulo }}</em>.
+              Biblioteca de Prácticas; {{ libro.fechaSubida | date:'yyyy' }}.
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel lateral -->
+        <div class="lg:col-span-4 space-y-6">
+
+          <!-- Detalles -->
+          <div class="bg-white/80 backdrop-blur-lg rounded-xl p-6 shadow-[0_10px_30px_rgba(18,38,71,0.06)] border border-marino-100/60">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-full bg-marino-50 flex items-center justify-center">
+                <span class="material-symbols-outlined text-marino-700">info</span>
+              </div>
+              <h3 class="font-display text-lg font-semibold text-marino-900">Detalles</h3>
+            </div>
+
+            <dl class="space-y-3 text-sm">
+              <div class="flex justify-between" *ngIf="libro.categoriaNombre">
+                <dt class="text-marino-400">Categoría</dt>
+                <dd class="text-marino-900 font-medium text-right">{{ libro.categoriaNombre }}</dd>
+              </div>
+              <div class="flex justify-between" *ngIf="libro.autor">
+                <dt class="text-marino-400">Autor</dt>
+                <dd class="text-marino-900 font-medium text-right">{{ libro.autor }}</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-marino-400">Publicado</dt>
+                <dd class="text-marino-900 font-medium text-right">{{ libro.fechaSubida | date:'dd/MM/yyyy' }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Acciones rápidas -->
+          <div class="bg-white rounded-xl p-6 border border-marino-100 shadow-sm">
+            <h3 class="text-xs font-semibold text-marino-400 uppercase tracking-wider mb-4">Acciones rápidas</h3>
+            <div class="space-y-2">
+              <a
+                [href]="urlArchivo(libro.rutaArchivo)"
+                download
+                class="flex items-center gap-3 text-sm text-marino-700 hover:text-ambar-600 hover:bg-marino-50/60 rounded-lg px-3 py-2.5 -mx-3 transition-colors"
+              >
+                <span class="material-symbols-outlined text-[20px]">download</span>
+                Descargar PDF
+              </a>
+              <a
+                [routerLink]="['/']"
+                [queryParams]="{ categoria: libro.categoriaId }"
+                class="flex items-center gap-3 text-sm text-marino-700 hover:text-ambar-600 hover:bg-marino-50/60 rounded-lg px-3 py-2.5 -mx-3 transition-colors"
+              >
+                <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                Ver más libros de esta categoría
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modal de vista previa -->
+      <div
+        *ngIf="mostrarVistaPrevia"
+        class="fixed inset-0 bg-marino-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        (click)="cerrarVistaPrevia()"
+      >
+        <div
+          class="relative max-w-lg w-full max-h-[90vh] flex flex-col items-center"
+          (click)="$event.stopPropagation()"
+        >
+          <button
+            (click)="cerrarVistaPrevia()"
+            class="absolute -top-10 right-0 text-white hover:text-ambar-400 transition-colors"
+          >
+            <span class="material-symbols-outlined text-3xl">close</span>
+          </button>
+
+        <div class="rounded-xl overflow-hidden shadow-2xl bg-white max-h-[80vh] overflow-y-auto flex flex-col gap-1">
+          <ng-container *ngIf="libro?.paginasPreview?.length; else soloPortadaModal">
+            <img
+              *ngFor="let pagina of libro!.paginasPreview"
+              [src]="urlArchivo(pagina)"
+              class="w-full block"
+            />
+          </ng-container>
+
+          <ng-template #soloPortadaModal>
+            <img
+              *ngIf="libro?.rutaPortada"
+              [src]="urlArchivo(libro!.rutaPortada!)"
+              [alt]="libro?.titulo"
+              class="max-h-[80vh] w-auto max-w-full object-contain block"
+            />
+            <div
+              *ngIf="!libro?.rutaPortada"
+              class="w-72 aspect-[2/3] flex items-center justify-center"
+              [ngClass]="colorPortada(libro!.id)"
+            >
+              <span class="font-display text-7xl font-semibold text-white/95">
+                {{ iniciales(libro!.titulo) }}
+              </span>
+            </div>
+          </ng-template>
+        </div>
+
+          <p class="text-center text-white/80 text-sm mt-3">
+            Primera página del documento — para ver el contenido completo, usa "Ver en línea"
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
