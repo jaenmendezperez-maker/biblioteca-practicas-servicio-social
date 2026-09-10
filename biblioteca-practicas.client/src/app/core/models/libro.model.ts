@@ -11,4 +11,5 @@ export interface Libro {
   categoriaNombre?: string;
   activo: boolean;
   paginasPreview: string;
+  contadorDescargas: number;
 }

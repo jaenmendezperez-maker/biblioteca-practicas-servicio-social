@@ -30,7 +30,7 @@ namespace BibliotecaPracticas.api.Controllers
         public async Task<ActionResult<IEnumerable<LibroDTO>>> GetLibros()
         {
             var librosRaw = await _context.Libros
-                .Where(l => l.Activo)
+                .Where(l => l.Activo && l.Categoria != null && l.Categoria.Activo)
                 .Include(l => l.Categoria)
                 .ToListAsync();
 
@@ -51,7 +51,8 @@ namespace BibliotecaPracticas.api.Controllers
                 FechaSubida = l.FechaSubida,
                 CategoriaId = l.CategoriaId,
                 CategoriaNombre = l.Categoria != null ? l.Categoria.Nombre : null,
-                Activo = l.Activo
+                Activo = l.Activo,
+                ContadorDescargas = l.ContadorDescargas,
             }).ToList();
 
             return Ok(libros);
@@ -83,7 +84,8 @@ namespace BibliotecaPracticas.api.Controllers
                 FechaSubida = l.FechaSubida,
                 CategoriaId = l.CategoriaId,
                 CategoriaNombre = l.Categoria != null ? l.Categoria.Nombre : null,
-                Activo = l.Activo
+                Activo = l.Activo,
+                ContadorDescargas = l.ContadorDescargas
             }).ToList();
 
             return Ok(libros);
@@ -116,7 +118,8 @@ namespace BibliotecaPracticas.api.Controllers
                 FechaSubida = libro.FechaSubida,
                 CategoriaId = libro.CategoriaId,
                 CategoriaNombre = libro.Categoria?.Nombre,
-                Activo = libro.Activo
+                Activo = libro.Activo,
+                ContadorDescargas = libro.ContadorDescargas
             });
         }
 
@@ -301,6 +304,68 @@ namespace BibliotecaPracticas.api.Controllers
             }
 
             return Ok(new { ruta = $"/uploads/{carpeta}/{nombreArchivo}" });
+        }
+        // POST: api/libros/5/registrar-descarga
+        [HttpPost("{id}/registrar-descarga")]
+        public async Task<IActionResult> RegistrarDescarga(int id)
+        {
+            var libro = await _context.Libros.FindAsync(id);
+            if (libro == null)
+                return NotFound();
+
+            libro.ContadorDescargas++;
+            await _context.SaveChangesAsync();
+
+            return Ok(libro.ContadorDescargas);
+        }
+        // PUT: api/libros/5/reemplazar-pdf
+        [HttpPut("{id}/reemplazar-pdf")]
+        [Authorize]
+        [RequestSizeLimit(150 * 1024 * 1024)]
+        public async Task<IActionResult> ReemplazarPdf(int id, [FromForm] IFormFile archivo)
+        {
+            var libro = await _context.Libros.FindAsync(id);
+            if (libro == null)
+                return NotFound();
+
+            if (archivo == null || archivo.Length == 0)
+                return BadRequest("Debes adjuntar un archivo PDF.");
+
+            if (Path.GetExtension(archivo.FileName).ToLower() != ".pdf")
+                return BadRequest("Solo se permiten archivos PDF.");
+
+            if (archivo.Length > 150 * 1024 * 1024)
+                return BadRequest("El archivo no debe superar los 150MB.");
+
+            // Borra el PDF anterior del disco
+            var rutaAnterior = Path.Combine(_env.ContentRootPath, "wwwroot", libro.RutaArchivo.TrimStart('/'));
+            if (System.IO.File.Exists(rutaAnterior))
+                System.IO.File.Delete(rutaAnterior);
+
+            // Guarda el nuevo PDF
+            var nombreArchivo = $"{Guid.NewGuid()}{Path.GetExtension(archivo.FileName)}";
+            var carpetaDestino = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads", "libros");
+
+            if (!Directory.Exists(carpetaDestino))
+                Directory.CreateDirectory(carpetaDestino);
+
+            var rutaCompleta = Path.Combine(carpetaDestino, nombreArchivo);
+
+            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+            {
+                await archivo.CopyToAsync(stream);
+            }
+
+            libro.RutaArchivo = $"/uploads/libros/{nombreArchivo}";
+
+            // Limpia los datos derivados del PDF anterior (ya no corresponden al nuevo archivo)
+            libro.RutaPortada = null;
+            libro.PaginasPreview = null;
+            libro.TablaContenido = null;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

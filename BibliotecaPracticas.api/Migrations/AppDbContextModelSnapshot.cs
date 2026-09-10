@@ -43,6 +43,32 @@ namespace BibliotecaPracticas.api.Migrations
                     b.ToTable("Categorias");
                 });
 
+            modelBuilder.Entity("BibliotecaPracticas.api.Models.Favorito", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("FechaAgregado")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LibroId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LibroId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Favoritos");
+                });
+
             modelBuilder.Entity("BibliotecaPracticas.api.Models.Libro", b =>
                 {
                     b.Property<int>("Id")
@@ -59,6 +85,9 @@ namespace BibliotecaPracticas.api.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<int>("CategoriaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ContadorDescargas")
                         .HasColumnType("integer");
 
                     b.Property<string>("Descripcion")
@@ -131,6 +160,25 @@ namespace BibliotecaPracticas.api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("BibliotecaPracticas.api.Models.Favorito", b =>
+                {
+                    b.HasOne("BibliotecaPracticas.api.Models.Libro", "Libro")
+                        .WithMany()
+                        .HasForeignKey("LibroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BibliotecaPracticas.api.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Libro");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("BibliotecaPracticas.api.Models.Libro", b =>

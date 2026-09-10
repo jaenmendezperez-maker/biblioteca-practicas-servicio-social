@@ -11,7 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { SidebarService } from '../../../core/services/sidebar.service';
 import { ReprocesamientoService } from '../../../core/services/reprocesamiento.service';
-
+import { ToastService } from '../../../core/services/toast.service';
 
 
 interface AccionPendiente {
@@ -42,12 +42,22 @@ export class PanelAdminComponent implements OnInit {
   cargando = true;
   error = '';
 
+  busquedaCategoria = '';
+  busquedaLibro = '';
+  busquedaUsuarios = '';
+
   nombreNuevaCategoria = '';
   categoriaEditandoId: number | null = null;
   nombreEditado = '';
+  arrastrandoPdf = false;
 
   reprocesando = false;
   progresoReproceso = { actual: 0, total: 0 };
+
+  paginaCategorias = 1;
+  itemsPorPagina = 8;
+  paginaUsuarios = 1;
+  paginaLibros = 1;
 
   libroEditando: Libro | null = null;
   formEdicionLibro = {
@@ -56,6 +66,8 @@ export class PanelAdminComponent implements OnInit {
     descripcion: '',
     categoriaId: 0
   };
+  nuevoArchivoPdf: File | null = null;
+  guardandoEdicion = false;
 
   accionPendiente: AccionPendiente | null = null;
 
@@ -65,7 +77,8 @@ export class PanelAdminComponent implements OnInit {
     private usuarioService: UsuarioService,
     public authService: AuthService,
     private reprocesamientoService: ReprocesamientoService,
-    public sidebarService: SidebarService
+    public sidebarService: SidebarService,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -130,8 +143,9 @@ export class PanelAdminComponent implements OnInit {
       next: () => {
         this.nombreNuevaCategoria = '';
         this.cargarTodo();
+        this.toast.exito('Categoría creada correctamente.');
       },
-      error: () => (this.error = 'No se pudo crear la categoría.')
+      error: () => this.toast.error('No se pudo crear la categoría.')
     });
   }
 
@@ -152,8 +166,9 @@ export class PanelAdminComponent implements OnInit {
       next: () => {
         this.cancelarEdicionCategoria();
         this.cargarTodo();
+        this.toast.exito('Categoría actualizada correctamente.');
       },
-      error: () => (this.error = 'No se pudo editar la categoría.')
+      error: () => this.toast.error('No se pudo editar la categoría.')
     });
   }
 
@@ -176,21 +191,57 @@ export class PanelAdminComponent implements OnInit {
       descripcion: libro.descripcion || '',
       categoriaId: libro.categoriaId
     };
+    this.nuevoArchivoPdf = null;
+    this.arrastrandoPdf = false;
   }
 
   cancelarEdicionLibro(): void {
     this.libroEditando = null;
+    this.nuevoArchivoPdf = null;
+    this.arrastrandoPdf = false;
+  }
+
+  onArchivoPdfSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.nuevoArchivoPdf = input.files[0];
+    }
   }
 
   guardarEdicionLibro(): void {
     if (!this.libroEditando) return;
 
+    this.guardandoEdicion = true;
+
     this.libroService.editarLibro(this.libroEditando.id, this.formEdicionLibro).subscribe({
       next: () => {
-        this.cancelarEdicionLibro();
-        this.cargarLibros();
+        if (this.nuevoArchivoPdf && this.libroEditando) {
+          this.libroService.reemplazarPdf(this.libroEditando.id, this.nuevoArchivoPdf).subscribe({
+            next: () => {
+              this.guardandoEdicion = false;
+              this.cancelarEdicionLibro();
+              this.cargarLibros();
+              this.toast.exito('Libro actualizado y PDF reemplazado.');
+            },
+            error: () => {
+              this.guardandoEdicion = false;
+              this.error = 'Se guardaron los datos, pero no se pudo reemplazar el PDF.';
+              this.cancelarEdicionLibro();
+              this.cargarLibros();
+              this.toast.error('Se guardaron los datos, pero no se pudo reemplazar el PDF.');
+            }
+          });
+        } else {
+          this.guardandoEdicion = false;
+          this.cancelarEdicionLibro();
+          this.cargarLibros();
+          this.toast.exito('Libro actualizado correctamente.');
+        }
       },
-      error: () => (this.error = 'No se pudo editar el libro.')
+      error: () => {
+        this.guardandoEdicion = false;
+        this.toast.error('No se pudo editar el libro.');
+      }
     });
   }
 
@@ -209,8 +260,11 @@ export class PanelAdminComponent implements OnInit {
     const rolNumero = Number(nuevoRol);
 
     this.usuarioService.cambiarRol(usuario.id, rolNumero).subscribe({
-      next: () => this.cargarUsuarios(),
-      error: () => (this.error = 'No se pudo cambiar el rol del usuario.')
+      next: () => {
+        this.cargarUsuarios();
+        this.toast.exito(`Rol de "${usuario.nombreCompleto}" actualizado.`);
+      },
+      error: () => this.toast.error('No se pudo cambiar el rol del usuario.')
     });
   }
 
@@ -227,6 +281,34 @@ export class PanelAdminComponent implements OnInit {
     return this.authService.usuarioActual()?.email === usuario.email;
   }
 
+  onDragOverEdicion(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.arrastrandoPdf = true;
+  }
+
+  onDragLeaveEdicion(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.arrastrandoPdf = false;
+  }
+
+  onArchivoPdfSoltado(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.arrastrandoPdf = false;
+
+    if (!event.dataTransfer?.files || event.dataTransfer.files.length === 0) return;
+
+    const file = event.dataTransfer.files[0];
+    if (file.type !== 'application/pdf') {
+      this.error = 'Solo se permiten archivos PDF.';
+      return;
+    }
+
+    this.nuevoArchivoPdf = file;
+  }
+
   // ===== Modal de confirmación =====
 
   cancelarAccion(): void {
@@ -236,16 +318,18 @@ export class PanelAdminComponent implements OnInit {
   confirmarAccion(): void {
     if (!this.accionPendiente) return;
 
-    const { tipo, id, nuevoEstado } = this.accionPendiente;
+    const { tipo, id, nuevoEstado, nombre } = this.accionPendiente;
+    const mensajeAccion = nuevoEstado ? 'reactivado' : 'dado de baja';
 
     if (tipo === 'categoria') {
       this.categoriaService.cambiarEstado(id, nuevoEstado).subscribe({
         next: () => {
           this.accionPendiente = null;
           this.cargarTodo();
+          this.toast.exito(`"${nombre}" ha sido ${mensajeAccion}.`);
         },
         error: () => {
-          this.error = 'No se pudo cambiar el estado de la categoría.';
+          this.toast.error('No se pudo cambiar el estado de la categoría.');
           this.accionPendiente = null;
         }
       });
@@ -254,9 +338,10 @@ export class PanelAdminComponent implements OnInit {
         next: () => {
           this.accionPendiente = null;
           this.cargarLibros();
+          this.toast.exito(`"${nombre}" ha sido ${mensajeAccion}.`);
         },
         error: () => {
-          this.error = 'No se pudo cambiar el estado del libro.';
+          this.toast.error('No se pudo cambiar el estado del libro.');
           this.accionPendiente = null;
         }
       });
@@ -265,13 +350,39 @@ export class PanelAdminComponent implements OnInit {
         next: () => {
           this.accionPendiente = null;
           this.cargarUsuarios();
+          this.toast.exito(`"${nombre}" ha sido ${mensajeAccion}.`);
         },
         error: () => {
-          this.error = 'No se pudo cambiar el estado del usuario.';
+          this.toast.error('No se pudo cambiar el estado del usuario.');
           this.accionPendiente = null;
         }
       });
     }
+  }
+
+  get categoriasFiltradas(): Categoria[] {
+    if (!this.busquedaCategoria.trim()) return this.categorias;
+    const termino = this.busquedaCategoria.toLowerCase();
+    return this.categorias.filter((c) => c.nombre.toLowerCase().includes(termino));
+  }
+
+  get librosFiltrados(): Libro[] {
+    if (!this.busquedaLibro.trim()) return this.libros;
+    const termino = this.busquedaLibro.toLowerCase();
+    return this.libros.filter((l) =>
+      l.titulo.toLowerCase().includes(termino) ||
+      (l.autor?.toLowerCase().includes(termino) ?? false) ||
+      (l.categoriaNombre?.toLowerCase().includes(termino) ?? false)
+    );
+  }
+
+  get usuariosFiltrados() {
+    if (!this.busquedaUsuarios.trim()) return this.usuarios;
+    const termino = this.busquedaUsuarios.toLowerCase();
+    return this.usuarios.filter((u) =>
+      u.nombreCompleto.toLowerCase().includes(termino) ||
+      u.email.toLowerCase().includes(termino)
+    );
   }
 
   async reprocesarLibrosAntiguos(): Promise<void> {
@@ -311,5 +422,31 @@ export class PanelAdminComponent implements OnInit {
         setTimeout(() => reject(new Error('Timeout: el libro tardó demasiado')), ms)
       )
     ]);
+  }
+  get categoriasPaginadas() {
+    const inicio = (this.paginaCategorias - 1) * this.itemsPorPagina;
+    return this.categoriasFiltradas.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  get totalPaginasCategorias(): number {
+    return Math.ceil(this.categoriasFiltradas.length / this.itemsPorPagina);
+  }
+
+  get usuariosPaginados() {
+    const inicio = (this.paginaUsuarios - 1) * this.itemsPorPagina;
+    return this.usuariosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  get totalPaginasUsuarios(): number {
+    return Math.ceil(this.usuariosFiltrados.length / this.itemsPorPagina);
+  }
+
+  get librosPaginadosAdmin() {
+    const inicio = (this.paginaLibros - 1) * this.itemsPorPagina;
+    return this.librosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  get totalPaginasLibros(): number {
+    return Math.ceil(this.librosFiltrados.length / this.itemsPorPagina);
   }
 }

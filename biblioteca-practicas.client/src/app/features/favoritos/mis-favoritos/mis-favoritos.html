@@ -1,0 +1,65 @@
+<div class="min-h-screen bg-crema font-sans flex relative overflow-hidden">
+
+  <div class="absolute -top-32 -right-20 w-96 h-96 rounded-full opacity-[0.06] pointer-events-none" style="background: #1B3A6B; filter: blur(80px);"></div>
+  <div class="absolute -bottom-32 -left-16 w-80 h-80 rounded-full opacity-[0.08] pointer-events-none" style="background: #E8A33D; filter: blur(80px);"></div>
+
+  <app-sidebar></app-sidebar>
+
+  <main class="flex-1 md:ml-72 flex flex-col min-h-screen relative z-10">
+
+    <header class="bg-crema/80 backdrop-blur-md border-b border-marino-100 sticky top-0 z-40">
+      <div class="flex items-center gap-3 w-full px-4 md:px-8 max-w-6xl mx-auto h-16">
+        <button (click)="sidebarService.toggle()" class="md:hidden text-marino-700 p-2 -ml-2">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <span class="text-lg font-display font-bold text-marino-700">Mis Favoritos</span>
+      </div>
+    </header>
+
+    <div class="flex-1 px-4 md:px-8 py-10 max-w-6xl mx-auto w-full">
+
+      <div class="mb-8">
+        <p class="text-xs font-semibold text-ambar-600 uppercase tracking-[0.2em] mb-2">Tu biblioteca personal</p>
+        <h1 class="font-display text-3xl md:text-4xl font-semibold text-marino-900 mb-2 tracking-tight">
+          Libros guardados
+        </h1>
+        <p class="text-[13px] text-gris-500">
+          {{ libros.length }} libro{{ libros.length !== 1 ? 's' : '' }} guardado{{ libros.length !== 1 ? 's' : '' }} para consultar después.
+        </p>
+      </div>
+
+      <div *ngIf="cargando" class="flex justify-center py-20">
+        <div class="w-8 h-8 border-4 border-marino-100 border-t-ambar-500 rounded-full animate-spin"></div>
+      </div>
+
+      <div *ngIf="error" class="text-red-600 text-sm text-center py-10">{{ error }}</div>
+
+      <div *ngIf="!cargando && !error && libros.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
+        <span class="material-symbols-outlined text-5xl text-marino-200 mb-3 block">bookmark_border</span>
+        <p class="text-sm text-marino-400 mb-4">Aún no has guardado ningún libro.</p>
+        <a routerLink="/" class="text-sm font-medium text-ambar-600 hover:text-ambar-700">Explorar catálogo →</a>
+      </div>
+
+      <div *ngIf="!cargando && !error && libros.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <article *ngFor="let libro of libros" class="flex flex-col gap-3 group">
+          <a [routerLink]="['/libro', libro.id]" class="contents">
+            <div
+              class="relative w-full aspect-[3/4] rounded-lg overflow-hidden shadow-sm group-hover:shadow-lg group-hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
+              [ngClass]="!libro.rutaPortada ? colorPortada(libro.id) : 'bg-marino-50'"
+            >
+              <img *ngIf="libro.rutaPortada" [src]="urlArchivo(libro.rutaPortada)" [alt]="libro.titulo" class="w-full h-full object-cover" />
+              <span *ngIf="!libro.rutaPortada" class="text-5xl font-bold text-white/90">{{ iniciales(libro.titulo) }}</span>
+              <div *ngIf="libro.categoriaNombre" class="absolute top-2 left-2 bg-white/95 text-marino-700 text-[10px] font-semibold uppercase px-2 py-1 rounded-full">
+                {{ libro.categoriaNombre }}
+              </div>
+            </div>
+            <div class="flex flex-col gap-0.5 px-0.5 mt-2">
+              <h4 class="text-sm font-semibold text-marino-900 line-clamp-2">{{ libro.titulo }}</h4>
+              <span class="text-xs text-marino-400" *ngIf="libro.autor">{{ libro.autor }}</span>
+            </div>
+          </a>
+        </article>
+      </div>
+    </div>
+  </main>
+</div>

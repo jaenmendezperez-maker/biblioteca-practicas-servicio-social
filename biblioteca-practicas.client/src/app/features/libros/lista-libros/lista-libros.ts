@@ -29,6 +29,9 @@ export class ListaLibrosComponent implements OnInit {
   mostrarHeroCategorias = true;
   tituloPagina = 'Biblioteca de Prácticas';
 
+  paginaActual = 1;
+  librosPorPagina = 12;
+
   constructor(
     private libroService: LibroService,
     private categoriaService: CategoriaService,
@@ -87,8 +90,28 @@ export class ListaLibrosComponent implements OnInit {
     });
   }
 
+  get totalPaginas(): number {
+    return Math.ceil(this.librosFiltrados.length / this.librosPorPagina);
+  }
+
+  get librosPaginados(): Libro[] {
+    const inicio = (this.paginaActual - 1) * this.librosPorPagina;
+    return this.librosFiltrados.slice(inicio, inicio + this.librosPorPagina);
+  }
+
+  get paginas(): number[] {
+    return Array.from({ length: this.totalPaginas}, (_, i) => i + 1);
+  }
+
+  irAPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas) return;
+    this.paginaActual = pagina;
+    window.scrollTo({ top: 0, behavior: 'smooth'});
+  }
+
   seleccionarCategoria(id: number | null): void {
     this.categoriaSeleccionada = id;
+    this.paginaActual = 1;
   }
 
   colorPortada(id: number): string {
@@ -106,6 +129,24 @@ export class ListaLibrosComponent implements OnInit {
   }
 
   urlArchivo(ruta: string): string {
-    return `http://localhost:5250${ruta}`;
+    const partes = ruta.split('/').filter(p => p);
+    // partes[0] = "uploads", partes[1] = "libros"/"portadas"/"preview", partes[2] = nombreArchivo
+    const carpeta = partes[1];
+    const nombreArchivo = partes[2];
+    return `http://localhost:5250/api/archivos/${carpeta}/${nombreArchivo}`;
+  }
+  
+  descargar(libro: Libro): void {
+    const url = this.urlArchivo(libro.rutaArchivo) + '?descargar=true';
+    const a = document.createElement('a');
+    a.href = url;
+    a.click();
+
+    this.libroService.registrarDescarga(libro.id).subscribe({
+      next: (nuevoContador) => {
+        libro.contadorDescargas = nuevoContador;
+      },
+      error: (err) => console.error('No se pudo registrar la descarga', err)
+    });
   }
 }

@@ -1,0 +1,26 @@
+<div class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full px-4 sm:px-0">
+  <div
+    *ngFor="let toast of toastService.toasts()"
+    class="flex items-start gap-3 px-4 py-3 rounded shadow-lg border animate-toast-in"
+    [ngClass]="{
+      'bg-emerald-100 border-emerald-300': toast.tipo === 'exito',
+      'bg-red-100 border-red-300': toast.tipo === 'error',
+      'bg-marino-100 border-marino-300': toast.tipo === 'info'
+    }"
+  >
+    <span
+      class="material-symbols-outlined text-[20px] shrink-0"
+      [ngClass]="{
+        'text-emerald-500': toast.tipo === 'exito',
+        'text-red-500': toast.tipo === 'error',
+        'text-marino-500': toast.tipo === 'info'
+      }"
+    >
+      {{ toast.tipo === 'exito' ? 'check_circle' : toast.tipo === 'error' ? 'error' : 'info' }}
+    </span>
+    <p class="text-sm text-marino-800 flex-1">{{ toast.mensaje }}</p>
+    <button (click)="toastService.cerrar(toast.id)" class="text-marino-300 hover:text-marino-600 shrink-0">
+      <span class="material-symbols-outlined text-[16px]">close</span>
+    </button>
+  </div>
+</div>

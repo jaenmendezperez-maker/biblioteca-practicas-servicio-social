@@ -34,5 +34,6 @@ namespace BibliotecaPracticas.api.Models
         [ForeignKey(nameof(UsuarioId))]
         public Usuario? Usuario { get; set; }
         public string? TablaContenido { get; set; } // JSON con array de {titulo, pagina}
+        public int ContadorDescargas { get; set; } = 0;
     }
 }

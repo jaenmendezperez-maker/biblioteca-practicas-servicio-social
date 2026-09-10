@@ -290,11 +290,18 @@ export class SubirLibroComponent implements OnInit {
   }
   
   private scrollAlPrimerError(): void {
-  setTimeout(() => {
-    const primerErrorEl = document.querySelector('.tarjeta-con-error');
-    if (primerErrorEl) {
-      primerErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, 50);
-}
+    setTimeout(() => {
+      const primerErrorEl = document.querySelector('.tarjeta-con-error');
+      if (primerErrorEl) {
+        primerErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  }
+
+  entradasConArchivo(): number {
+    return this.entradas.filter((e) => e.archivo !== null).length;
+  }
+  entradasSinCategoria(): number {
+    return this.entradas.filter((e) => e.categoriaId === null).length;
+  }
 }

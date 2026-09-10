@@ -36,7 +36,10 @@ export class LibroService {
   }
 
   descargarArchivo(ruta: string, nombreArchivo: string): void {
-  const url = `http://localhost:5250${ruta}`;
+    const partes = ruta.split('/').filter(p => p);
+    const carpeta = partes[1];
+    const nombreArchivoServidor = partes[2];
+    const url = `http://localhost:5250/api/archivos/${carpeta}/${nombreArchivoServidor}`;
     this.http.get(url, { responseType: 'blob' }).subscribe({
       next: (blob) => {
         const urlBlob = window.URL.createObjectURL(blob);
@@ -48,5 +51,15 @@ export class LibroService {
       },
       error: (err) => console.error('Error al descargar el archivo', err)
     });
+  }
+  
+  registrarDescarga(id: number): Observable<number> {
+    return this.http.post<number>(`${this.apiUrl}/${id}/registrar-descarga`,{});
+  }
+
+  reemplazarPdf(id: number, archivo: File): Observable<void> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.put<void>(`${this.apiUrl}/${id}/reemplazar-pdf`, formData);
   }
 }

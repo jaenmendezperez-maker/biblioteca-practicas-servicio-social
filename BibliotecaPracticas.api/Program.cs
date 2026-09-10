@@ -64,15 +64,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("PermitirAngular");
 app.UseHttpsRedirection();
-app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
-{
-    OnPrepareResponse = ctx =>
-    {
-        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "http://localhost:4200");
-    }
-});
+app.UseCors("PermitirAngular");
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 

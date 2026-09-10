@@ -16,9 +16,13 @@ export class RegistroComponent {
   email = '';
   password = '';
   confirmarPassword = '';
+  mostrarPassword = false;
+  mostrarConfirmarPassword = false;
 
   cargando = false;
   error = '';
+
+  anioActual = new Date().getFullYear();
 
   private apiUrl = 'http://localhost:5250/api/Usuarios';
 

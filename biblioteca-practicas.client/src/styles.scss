@@ -1,18 +1,58 @@
 @import "tailwindcss";
 
 @theme {
+  /* ===== Marino (color de marca principal) ===== */
   --color-marino-50: #eef2f8;
   --color-marino-100: #d6e0ee;
+  --color-marino-200: #b8c9e0;
+  --color-marino-300: #8aa3c9;
   --color-marino-400: #3a5788;
+  --color-marino-500: #2d4a78;
   --color-marino-600: #25436f;
   --color-marino-700: #1B3A6B;
+  --color-marino-800: #172f56;
   --color-marino-900: #122647;
 
+  /* ===== Ámbar (acento cálido) ===== */
+  --color-ambar-50: #fdf6e9;
+  --color-ambar-100: #fbecc9;
+  --color-ambar-200: #f6d894;
+  --color-ambar-300: #f2c66a;
   --color-ambar-400: #EFB85C;
   --color-ambar-500: #E8A33D;
   --color-ambar-600: #C98526;
+  --color-ambar-700: #a56a1c;
+  --color-ambar-800: #7d5116;
 
+  /* ===== Crema (fondo base) ===== */
   --color-crema: #F7F5F0;
+  --color-crema-oscuro: #EDE9E0;
+
+  /* ===== Esmeralda (éxito / confirmaciones) ===== */
+  --color-esmeralda-50: #eafaf3;
+  --color-esmeralda-100: #c9f0dd;
+  --color-esmeralda-400: #34b982;
+  --color-esmeralda-500: #22a06e;
+  --color-esmeralda-600: #1a7f57;
+
+  /* ===== Terracota (alertas suaves) ===== */
+  --color-terracota-50: #fbf0ec;
+  --color-terracota-100: #f4d9cd;
+  --color-terracota-400: #d97b57;
+  --color-terracota-500: #c2603d;
+  --color-terracota-600: #a04c30;
+
+  /* ===== Gris (con tinte marino, para textos/bordes neutros) ===== */
+  --color-gris-50: #f7f8fa;
+  --color-gris-100: #eef0f4;
+  --color-gris-200: #dde1e8;
+  --color-gris-300: #c3c9d4;
+  --color-gris-400: #9aa3b5;
+  --color-gris-500: #717d94;
+  --color-gris-600: #545e73;
+  --color-gris-700: #3f4757;
+  --color-gris-800: #2a2f3a;
+  --color-gris-900: #1a1d24;
 
   --font-display: "Fraunces", serif;
   --font-sans: "Inter", system-ui, sans-serif;
