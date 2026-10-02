@@ -35,5 +35,8 @@ namespace BibliotecaPracticas.api.Models
         public Usuario? Usuario { get; set; }
         public string? TablaContenido { get; set; } // JSON con array de {titulo, pagina}
         public int ContadorDescargas { get; set; } = 0;
+        public int? NumeroPaginas { get; set; }
+        public long? TamanoBytes { get; set; }
+        public List<Semestre> Semestres { get; set; } = new();
     }
 }

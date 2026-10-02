@@ -10,7 +10,7 @@
 
     <!-- Header -->
     <header class="bg-crema/80 backdrop-blur-md border-b border-marino-100 sticky top-0 z-40">
-      <div class="flex justify-between items-center w-full px-4 md:px-8 max-w-6xl mx-auto h-16 gap-3">
+      <div class="flex justify-between items-center w-full px-4 md:px-8 max-w-7xl mx-auto h-16 gap-3">
         <button
           (click)="sidebarService.toggle()"
           class="md:hidden text-marino-700 p-2 -ml-2"
@@ -18,7 +18,11 @@
           <span class="material-symbols-outlined">menu</span>
         </button>
 
-        <div class="flex-1 max-w-md relative">
+        <span class="text-lg md:text-xl font-display font-bold text-marino-700 tracking-tight truncate shrink-0">
+          Categorías
+        </span>
+
+        <div class="flex-1 max-w-md mx-4 relative hidden sm:block">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-marino-400 text-[20px]">
             search
           </span>
@@ -36,6 +40,18 @@
       </div>
     </header>
 
+    <!-- Búsqueda mobile, aparte, para pantallas chicas -->
+    <div class="sm:hidden px-4 py-3 relative bg-crema border-b border-marino-100">
+      <span class="material-symbols-outlined absolute left-7 top-1/2 -translate-y-1/2 text-marino-400 text-[20px]">
+        search
+      </span>
+      <input
+        type="text"
+        [(ngModel)]="textoBusqueda"
+        placeholder="Buscar categoría..."
+        class="w-full bg-white rounded py-2 pl-10 pr-4 text-sm text-marino-900 placeholder-marino-400/60 border border-marino-200 focus:outline-none focus:ring-2 focus:ring-ambar-500"
+      />
+    </div>
     <div class="flex-1 px-4 md:px-8 py-10 max-w-6xl mx-auto w-full">
 
       <!-- Encabezado editorial -->

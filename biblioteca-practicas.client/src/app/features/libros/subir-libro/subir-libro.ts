@@ -9,6 +9,8 @@ import { CategoriaService } from '../../../core/services/categoria.service';
 import { LibroService } from '../../../core/services/libro.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarService } from '../../../core/services/sidebar.service';
+import { Semestre } from '../../../core/models/semestre.model';
+import { SemestreService } from '../../../core/services/semestre.service';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
@@ -27,6 +29,8 @@ interface EntradaLibro {
   estado: 'pendiente' | 'subiendo' | 'exito' | 'error';
   arrastrando: boolean;
   tablaContenidoJson: string | null;
+  numeroPaginas: number | null;
+  semestreIds: number[];
 }
 
 @Component({
@@ -37,6 +41,7 @@ interface EntradaLibro {
 })
 export class SubirLibroComponent implements OnInit {
   categorias: Categoria[] = [];
+  semestres: Semestre[] = [];
   entradas: EntradaLibro[] = [];
   private siguienteId = 1;
 
@@ -49,13 +54,18 @@ export class SubirLibroComponent implements OnInit {
     private libroService: LibroService,
     private authService: AuthService,
     private router: Router,
-    public sidebarService: SidebarService
+    public sidebarService: SidebarService,
+    private semestreService: SemestreService
   ) {}
 
   ngOnInit(): void {
     this.categoriaService.getCategorias().subscribe({
       next: (data) => (this.categorias = data),
       error: (err) => console.error('Error cargando categorías', err)
+    });
+    this.semestreService.getSemestres().subscribe({
+      next: (data) => (this.semestres = data),
+      error: (err) => console.error('Error cargando semestres', err)
     });
 
     this.agregarEntrada();
@@ -77,6 +87,8 @@ export class SubirLibroComponent implements OnInit {
       estado: 'pendiente',
       arrastrando: false,
       tablaContenidoJson: null,
+      numeroPaginas: null,
+      semestreIds: []
     });
   }
 
@@ -146,6 +158,7 @@ export class SubirLibroComponent implements OnInit {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      entrada.numeroPaginas = pdf.numPages;
       const pagina = await pdf.getPage(1);
       entrada.tablaContenidoJson = await this.extraerTablaContenido(pdf);
 
@@ -202,6 +215,19 @@ export class SubirLibroComponent implements OnInit {
       console.error('No se pudo extraer la tabla de contenido', err);
       return null;
     }
+  }
+  
+  toggleSemestre(entrada: EntradaLibro, id: number): void {
+    const i = entrada.semestreIds.indexOf(id);
+    if (i >= 0) {
+      entrada.semestreIds.splice(i, 1);
+    } else {
+      entrada.semestreIds.push(id);
+    }
+  }
+
+  tieneSemestre(entrada: EntradaLibro, id: number): boolean {
+    return entrada.semestreIds.includes(id);
   }
 
   private validarEntrada(entrada: EntradaLibro): boolean {
@@ -266,6 +292,12 @@ export class SubirLibroComponent implements OnInit {
       if (entrada.portadaBlob) {
         formData.append('Portada', entrada.portadaBlob, 'portada.png');
       }
+      if (entrada.numeroPaginas) {
+        formData.append('NumeroPaginas', entrada.numeroPaginas.toString());
+      }
+      for (const semId of entrada.semestreIds) {
+        formData.append('SemestreIds', semId.toString());
+      }
 
       try {
         await this.libroService.subirLibro(formData).toPromise();
@@ -287,6 +319,7 @@ export class SubirLibroComponent implements OnInit {
       this.errorGeneral = 'Algunos libros no se pudieron subir. Revisa los detalles abajo.';
       this.scrollAlPrimerError();
     }
+    
   }
   
   private scrollAlPrimerError(): void {

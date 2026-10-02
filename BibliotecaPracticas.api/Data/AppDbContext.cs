@@ -13,5 +13,20 @@ namespace BibliotecaPracticas.api.Data
         public DbSet<Categoria> Categorias { get; set; }
         public DbSet<Libro> Libros { get; set; }
         public DbSet<Favorito> Favoritos { get; set; }
+        public DbSet<Semestre> Semestres { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Semestre>().HasData(
+                Enumerable.Range(1, 10).Select(n => new Semestre
+                {
+                    Id = n,
+                    Numero = n,
+                    Nombre = $"Semestre {n}"
+                })
+            );
+        }
     }
 }

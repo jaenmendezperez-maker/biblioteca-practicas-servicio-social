@@ -96,6 +96,9 @@ namespace BibliotecaPracticas.api.Migrations
                     b.Property<DateTime>("FechaSubida")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("NumeroPaginas")
+                        .HasColumnType("integer");
+
                     b.Property<string>("PaginasPreview")
                         .HasColumnType("text");
 
@@ -108,6 +111,9 @@ namespace BibliotecaPracticas.api.Migrations
 
                     b.Property<string>("TablaContenido")
                         .HasColumnType("text");
+
+                    b.Property<long?>("TamanoBytes")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
@@ -124,6 +130,88 @@ namespace BibliotecaPracticas.api.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("Libros");
+                });
+
+            modelBuilder.Entity("BibliotecaPracticas.api.Models.Semestre", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Semestres");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Nombre = "Semestre 1",
+                            Numero = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Nombre = "Semestre 2",
+                            Numero = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Nombre = "Semestre 3",
+                            Numero = 3
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Nombre = "Semestre 4",
+                            Numero = 4
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Nombre = "Semestre 5",
+                            Numero = 5
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Nombre = "Semestre 6",
+                            Numero = 6
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Nombre = "Semestre 7",
+                            Numero = 7
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Nombre = "Semestre 8",
+                            Numero = 8
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Nombre = "Semestre 9",
+                            Numero = 9
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Nombre = "Semestre 10",
+                            Numero = 10
+                        });
                 });
 
             modelBuilder.Entity("BibliotecaPracticas.api.Models.Usuario", b =>
@@ -162,6 +250,21 @@ namespace BibliotecaPracticas.api.Migrations
                     b.ToTable("Usuarios");
                 });
 
+            modelBuilder.Entity("LibroSemestre", b =>
+                {
+                    b.Property<int>("LibrosId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SemestresId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("LibrosId", "SemestresId");
+
+                    b.HasIndex("SemestresId");
+
+                    b.ToTable("LibroSemestre");
+                });
+
             modelBuilder.Entity("BibliotecaPracticas.api.Models.Favorito", b =>
                 {
                     b.HasOne("BibliotecaPracticas.api.Models.Libro", "Libro")
@@ -198,6 +301,21 @@ namespace BibliotecaPracticas.api.Migrations
                     b.Navigation("Categoria");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("LibroSemestre", b =>
+                {
+                    b.HasOne("BibliotecaPracticas.api.Models.Libro", null)
+                        .WithMany()
+                        .HasForeignKey("LibrosId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BibliotecaPracticas.api.Models.Semestre", null)
+                        .WithMany()
+                        .HasForeignKey("SemestresId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BibliotecaPracticas.api.Models.Categoria", b =>

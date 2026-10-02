@@ -24,6 +24,7 @@ export class ListaLibrosComponent implements OnInit {
 
   textoBusqueda = '';
   categoriaSeleccionada: number | null = null;
+  semestreSeleccionado: number | null = null;
 
   // Nuevo: controla si mostramos el hero de "categoría destacada" o no
   mostrarHeroCategorias = true;
@@ -49,8 +50,14 @@ export class ListaLibrosComponent implements OnInit {
     // Si la ruta trae ?categoria=5, filtra directo por esa categoría
     this.route.queryParams.subscribe((params) => {
       const catId = params['categoria'] ? Number(params['categoria']) : null;
+      const semId = params['semestre'] ? Number(params['semestre']) : null;
+
       this.categoriaSeleccionada = catId;
-      this.mostrarHeroCategorias = !catId; // oculta el hero grande si vienes filtrado
+      this.semestreSeleccionado = semId;
+      this.paginaActual = 1;
+
+      // oculta el hero grande si vienes filtrado por categoría o semestre
+      this.mostrarHeroCategorias = !catId && !semId;
     });
 
     // Si la ruta es /todos-los-libros, no mostramos el hero de categorías
@@ -86,7 +93,11 @@ export class ListaLibrosComponent implements OnInit {
         this.categoriaSeleccionada === null ||
         libro.categoriaId === this.categoriaSeleccionada;
 
-      return coincideTexto && coincideCategoria;
+      const coincideSemestre =
+        this.semestreSeleccionado === null ||
+        (libro.semestres?.some((s) => s.id === this.semestreSeleccionado) ?? false);
+
+      return coincideTexto && coincideCategoria && coincideSemestre;
     });
   }
 

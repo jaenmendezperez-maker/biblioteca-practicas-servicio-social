@@ -60,6 +60,17 @@
     </li>
     <li>
       <a
+        routerLink="/semestres"
+        routerLinkActive="bg-marino-50 text-marino-700 font-semibold border-ambar-500"
+        (click)="sidebarService.cerrar()"
+        class="flex items-center gap-4 p-3 rounded-lg transition-colors border-l-2 border-transparent text-marino-400 hover:bg-marino-50/60 hover:text-marino-700"
+      >
+        <span class="material-symbols-outlined text-[20px]">school</span>
+        <span class="text-sm">Semestres</span>
+      </a>
+    </li>
+    <li>
+      <a
         routerLink="/todos-los-libros"
         routerLinkActive="bg-marino-50 text-marino-700 font-semibold border-ambar-500"
         (click)="sidebarService.cerrar()"

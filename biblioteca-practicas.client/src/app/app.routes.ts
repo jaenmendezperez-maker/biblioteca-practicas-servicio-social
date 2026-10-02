@@ -9,6 +9,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { RegistroComponent } from './features/auth/registro/registro';
 import { MisFavoritosComponent } from './features/favoritos/mis-favoritos/mis-favoritos';
+import { ListaSemestresComponent } from './features/semestres/lista-semestres/lista-semestres';
 
 export const routes: Routes = [
   { path: '', component: ListaLibrosComponent },
@@ -20,4 +21,5 @@ export const routes: Routes = [
   { path: 'subir', component: SubirLibroComponent, canActivate: [adminGuard] },
   { path: 'libro/:id', component: DetalleLibroComponent },
   { path: 'admin', component: PanelAdminComponent, canActivate: [adminGuard] },
+  { path: 'semestres', component: ListaSemestresComponent },
 ];

@@ -15,7 +15,7 @@
         </button>
         <span class="text-lg md:text-xl font-display font-bold text-marino-700 tracking-tight truncate">{{ tituloPagina }}</span>
 
-        <div class="flex-1 max-w-md mx-8 relative">
+        <div class="flex-1 max-w-md mx-8 relative hidden sm:block">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-marino-400 text-[20px]">
             search
           </span>
@@ -24,7 +24,7 @@
             [(ngModel)]="textoBusqueda"
             (ngModelChange)="paginaActual = 1"
             placeholder="Buscar por título o autor..."
-            class="w-full bg-white rounded py-3 pl-11 pr-4 text-sm text-marino-900 placeholder-marino-400/60 border border-marino-100 focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent transition-shadow"
+            class="w-full bg-white rounded py-3 pl-11 pr-4 text-sm text-marino-900 placeholder-marino-400/60 border border-marino-200 focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent transition-shadow"
           />
         </div>
 
@@ -35,7 +35,7 @@
     </header>
 
     <!-- Búsqueda mobile -->
-    <div class="md:hidden px-4 py-3 relative bg-crema border-b border-marino-100">
+    <div class="md:hidden px-4 py-3 relative bg-crema border-b border-marino-200">
       <span class="material-symbols-outlined absolute left-7 top-1/2 -translate-y-1/2 text-marino-400 text-[20px]">
         search
       </span>
@@ -44,7 +44,7 @@
         [(ngModel)]="textoBusqueda"
         (ngModelChange)="paginaActual = 1"
         placeholder="Buscar por título o autor..."
-        class="w-full bg-white rounded py-2 pl-10 pr-4 text-sm text-marino-900 placeholder-marino-400/60 border border-marino-100 focus:outline-none focus:ring-2 focus:ring-ambar-500"
+        class="w-full bg-white rounded py-2 pl-10 pr-4 text-sm text-marino-900 placeholder-marino-400/60 border border-marino-200 focus:outline-none focus:ring-2 focus:ring-ambar-500"
       />
     </div>
 
@@ -144,13 +144,13 @@
       <!-- Estado: vacío -->
       <div *ngIf="!cargando && !error && librosFiltrados.length === 0" class="flex flex-col items-center justify-center py-24 text-marino-300">
         <span class="material-symbols-outlined text-5xl mb-3">inbox</span>
-        <p>No se encontraron libros con esos filtros.</p>
+        <p>No se encontraron artículos con esos filtros.</p>
       </div>
 
       <!-- Libros -->
       <section *ngIf="!cargando && !error && librosFiltrados.length > 0">
         <div class="flex items-end justify-between mb-6 border-b border-marino-100 pb-3">
-          <h2 class="font-display text-2xl font-semibold text-marino-900">Libros disponibles</h2>
+          <h2 class="font-display text-2xl font-semibold text-marino-900">Artículos disponibles</h2>
           <span class="text-sm text-marino-400">{{ librosFiltrados.length }} resultado(s)</span>
         </div>
 
@@ -194,13 +194,13 @@
                   {{ libro.titulo }}
                 </h4>
 
-<div class="flex items-center gap-2">
-  <span class="text-xs text-marino-400 truncate max-w-[140px]">{{ libro.autor || '' }}</span>
-  <span class="text-[11px] text-marino-300 flex items-center gap-1 shrink-0" *ngIf="libro.contadorDescargas > 0">
-    <span class="material-symbols-outlined text-[13px]">download</span>
-    {{ libro.contadorDescargas }}
-  </span>
-</div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-marino-400 truncate max-w-[140px]">{{ libro.autor || '' }}</span>
+                  <span class="text-[11px] text-marino-300 flex items-center gap-1 shrink-0" *ngIf="libro.contadorDescargas > 0">
+                    <span class="material-symbols-outlined text-[13px]">download</span>
+                    {{ libro.contadorDescargas }}
+                  </span>
+                </div>
 
                 <p class="text-xs text-marino-400/70 line-clamp-2 mt-1 min-h-[2rem]">
                   {{ libro.descripcion || '' }}
@@ -213,7 +213,7 @@
               <a
                 [href]="urlArchivo(libro.rutaArchivo)"
                 target="_blank"
-                class="flex-1 border border-marino-100 text-marino-700 text-xs font-medium py-2 rounded-lg text-center hover:bg-marino-50 transition-colors"
+                class="flex-1 border border-marino-100 text-marino-700 text-xs font-medium py-2.5 rounded-lg text-center hover:bg-marino-50 transition-colors"
               >
                 Ver
               </a>

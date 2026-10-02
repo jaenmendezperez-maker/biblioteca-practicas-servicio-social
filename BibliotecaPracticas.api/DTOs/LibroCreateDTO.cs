@@ -13,5 +13,16 @@ namespace BibliotecaPracticas.api.DTOs
         public IFormFile? Portada { get; set; }
         public List<IFormFile>? Paginas { get; set; }
         public string? TablaContenidoJson { get; set; }
+        public int? NumeroPaginas { get; set; }
+        public List<int> SemestreIds { get; set; } = new();
+    }
+    public class ImagenExtraidaDTO
+    {
+        public IFormFile Imagen { get; set; } = null!;
+        public string Tipo { get; set; } = string.Empty;
+    }
+    public class ReemplazarPdfDTO
+    {
+        public IFormFile Archivo { get; set; } = null!;
     }
 }

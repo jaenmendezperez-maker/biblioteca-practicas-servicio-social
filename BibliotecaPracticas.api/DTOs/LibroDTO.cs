@@ -21,5 +21,8 @@ namespace BibliotecaPracticas.api.DTOs
         public int CategoriaId { get; set; }
         public string? CategoriaNombre { get; set; }
         public int ContadorDescargas { get; set; }
+        public int? NumeroPaginas { get; set; }
+        public long? TamanoBytes { get; set; }
+        public List<SemestreDTO> Semestres { get; set; } = new();
     }
 }

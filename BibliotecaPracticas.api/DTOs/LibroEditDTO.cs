@@ -6,5 +6,6 @@ namespace BibliotecaPracticas.api.DTOs
         public string? Autor { get; set; }
         public string? Descripcion { get; set; }
         public int CategoriaId { get; set; }
+        public List<int>? SemestreIds { get; set; }
     }
 }

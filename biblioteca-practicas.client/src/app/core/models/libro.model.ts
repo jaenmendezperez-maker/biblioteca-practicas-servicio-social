@@ -1,3 +1,5 @@
+import { Semestre } from "./semestre.model";
+
 export interface Libro {
   id: number;
   titulo: string;
@@ -12,4 +14,7 @@ export interface Libro {
   activo: boolean;
   paginasPreview: string;
   contadorDescargas: number;
+  numeroPaginas?: number;
+  tamanoBytes?: number;
+  semestres?: Semestre[];
 }

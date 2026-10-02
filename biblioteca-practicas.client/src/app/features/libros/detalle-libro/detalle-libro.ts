@@ -7,12 +7,13 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { SidebarService } from '../../../core/services/sidebar.service';
 import { FavoritoService } from '../../../core/services/favorito.service';
+import { AvisoLegalComponent } from '../../../shared/components/aviso-legal/aviso-legal';
 
 
 @Component({
   selector: 'app-detalle-libro',
   standalone: true,
-  imports: [CommonModule, RouterLink, SidebarComponent],
+  imports: [CommonModule, RouterLink, SidebarComponent, AvisoLegalComponent],
   templateUrl: './detalle-libro.html'
 })
 export class DetalleLibroComponent implements OnInit {
@@ -21,6 +22,8 @@ export class DetalleLibroComponent implements OnInit {
   error = '';
   tabActiva: 'sinopsis' | 'contenido' | 'citas' = 'sinopsis';
   mostrarVistaPrevia = false;
+  librosRelacionados: Libro[] = [];
+  libroNoEncontrado = false;
 
   private coloresPortada = [
     'bg-marino-700',
@@ -45,22 +48,40 @@ export class DetalleLibroComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      this.cargarLibro(id);
+    });
+  }
+
+  private cargarLibro(id: number): void {
     if (!id) {
-      this.error = 'Libro no encontrado.';
+      this.libroNoEncontrado = true;
       this.cargando = false;
       return;
     }
+
+    // Resetea el estado antes de cargar el nuevo libro
+    this.cargando = true;
+    this.libro = null;
+    this.libroNoEncontrado = false;
+    this.error = '';
+    this.tabActiva = 'sinopsis';
 
     this.libroService.getLibro(id).subscribe({
       next: (data) => {
         this.libro = data;
         this.cargando = false;
         this.verificarFavorito(data.id);
+        this.cargarRelacionados(data.categoriaId, data.id);
       },
       error: (err) => {
         console.error(err);
-        this.error = 'No se pudo cargar el libro.';
+        if (err.status === 404) {
+          this.libroNoEncontrado = true;
+        } else {
+          this.error = 'No se pudo cargar el libro.';
+        }
         this.cargando = false;
       }
     });
@@ -121,29 +142,46 @@ export class DetalleLibroComponent implements OnInit {
     });
   }
 
-  toggleFavorito(): void {
-  if (!this.libro) return;
-
-  if (!this.authService.estaAutenticado()) {
-    this.error = 'Debes iniciar sesión para guardar favoritos.';
-    return;
+  private cargarRelacionados(categoriaId: number, libroActualId: number): void {
+    this.libroService.getLibros().subscribe({
+      next: (todos) => {
+        this.librosRelacionados = todos
+          .filter((l) => l.categoriaId === categoriaId && l.id !== libroActualId)
+          .slice(0, 4);
+      },
+      error: () => {}
+    });
   }
 
-  this.cargandoFavorito = true;
+  toggleFavorito(): void {
+    if (!this.libro) return;
 
-  const accion = this.esFavorito
-    ? this.favoritoService.quitarFavorito(this.libro.id)
-    : this.favoritoService.agregarFavorito(this.libro.id);
-
-  accion.subscribe({
-    next: () => {
-      this.esFavorito = !this.esFavorito;
-      this.cargandoFavorito = false;
-    },
-    error: (err) => {
-      console.error('Error actualizando favorito', err);
-      this.cargandoFavorito = false;
+    if (!this.authService.estaAutenticado()) {
+      this.error = 'Debes iniciar sesión para guardar favoritos.';
+      return;
     }
-  });
-}
+
+    this.cargandoFavorito = true;
+
+    const accion = this.esFavorito
+      ? this.favoritoService.quitarFavorito(this.libro.id)
+      : this.favoritoService.agregarFavorito(this.libro.id);
+
+    accion.subscribe({
+      next: () => {
+        this.esFavorito = !this.esFavorito;
+        this.cargandoFavorito = false;
+      },
+      error: (err) => {
+        console.error('Error actualizando favorito', err);
+        this.cargandoFavorito = false;
+      }
+    });
+  }
+
+  formatearTamano(bytes?: number): string {
+    if (!bytes) return '—';
+    const mb = bytes / (1024 * 1024);
+    return mb >= 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(0)} KB`;
+  }
 }

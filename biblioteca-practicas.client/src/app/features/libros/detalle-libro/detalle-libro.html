@@ -1,16 +1,16 @@
-<div class="min-h-screen bg-crema font-sans flex">
+<div class="min-h-screen bg-crema font-sans flex relative overflow-hidden">
+
+  <div class="absolute -top-32 -right-20 w-96 h-96 rounded-full opacity-[0.06] pointer-events-none" style="background: #1B3A6B; filter: blur(80px);"></div>
+  <div class="absolute -bottom-32 -left-16 w-80 h-80 rounded-full opacity-[0.08] pointer-events-none" style="background: #E8A33D; filter: blur(80px);"></div>
 
   <app-sidebar></app-sidebar>
 
-  <div class="flex-1 md:ml-72">
+  <div class="flex-1 md:ml-72 relative z-10">
 
     <!-- Header -->
-    <header class="bg-crema/90 backdrop-blur-xl sticky top-0 z-40 border-b border-marino-100">
+    <header class="bg-crema/80 backdrop-blur-xl sticky top-0 z-40 border-b border-marino-100">
       <div class="max-w-6xl mx-auto px-4 md:px-10 h-16 flex items-center justify-between gap-4">
-        <button
-          (click)="sidebarService.toggle()"
-          class="md:hidden text-marino-700 p-2 -ml-2"
-        >
+        <button (click)="sidebarService.toggle()" class="md:hidden text-marino-700 p-2 -ml-2">
           <span class="material-symbols-outlined">menu</span>
         </button>
 
@@ -24,7 +24,7 @@
           <input
             type="text"
             placeholder="Buscar otro libro..."
-            class="w-full bg-white border border-marino-200 rounded py-2.5 pl-11 pr-4 text-sm text-marino-900 placeholder-marino-400/60 focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent transition-shadow"
+            class="w-full bg-white border border-marino-100 rounded-full py-2.5 pl-11 pr-4 text-sm text-marino-900 placeholder-marino-400/60 focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent transition-shadow"
           />
         </div>
 
@@ -49,11 +49,23 @@
       <p>{{ error }}</p>
     </div>
 
+    <!-- No encontrado -->
+    <div *ngIf="libroNoEncontrado" class="flex flex-col items-center justify-center py-24 px-4 text-center">
+      <span class="material-symbols-outlined text-6xl text-marino-200 mb-4">search_off</span>
+      <h2 class="font-display text-2xl font-semibold text-marino-900 mb-2">Libro no encontrado</h2>
+      <p class="text-sm text-marino-400 mb-6 max-w-sm">
+        Este libro no existe o fue dado de baja. Puede que el enlace esté roto o el libro ya no esté disponible.
+      </p>
+      <a routerLink="/" class="bg-marino-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-marino-600 transition-colors">
+        Volver al catálogo
+      </a>
+    </div>
+
     <!-- Contenido -->
-    <main *ngIf="!cargando && !error && libro" class="max-w-6xl mx-auto px-6 md:px-10 py-12">
+    <main *ngIf="!cargando && !error && !libroNoEncontrado && libro" class="max-w-6xl mx-auto px-6 md:px-10 py-12">
 
       <!-- Hero -->
-      <section class="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16">
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-14">
 
         <!-- Portada -->
         <div class="lg:col-span-4 flex justify-center lg:justify-start">
@@ -70,7 +82,7 @@
               />
               <ng-container *ngIf="!libro.rutaPortada">
                 <div class="absolute inset-0 opacity-[0.08]"
-                    style="background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 1px, transparent 12px);">
+                     style="background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 1px, transparent 12px);">
                 </div>
                 <span class="relative font-display text-6xl font-semibold text-white/95 select-none">
                   {{ iniciales(libro.titulo) }}
@@ -78,7 +90,6 @@
               </ng-container>
             </div>
 
-            <!-- Hover: Vista previa (abre modal, no el PDF completo) -->
             <button
               (click)="abrirVistaPrevia()"
               class="absolute inset-0 bg-gradient-to-t from-marino-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4"
@@ -90,13 +101,13 @@
           </div>
         </div>
 
-        <!-- Metadata -->
+        <!-- Metadata + sinopsis + acciones -->
         <div class="lg:col-span-8 flex flex-col justify-center">
           <div class="flex items-center gap-3 mb-4" *ngIf="libro.categoriaNombre">
-            <span class="bg-marino-100 text-marino-700 text-xs px-3 py-1 rounded-lg uppercase tracking-wider font-bold">
+            <span class="bg-marino-50 text-marino-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-bold">
               {{ libro.categoriaNombre }}
             </span>
-            <span class="bg-ambar-500/20 text-ambar-600 text-xs px-3 py-1 rounded-lg font-semibold">
+            <span class="bg-ambar-500/15 text-ambar-600 text-xs px-3 py-1 rounded-full font-semibold">
               {{ libro.fechaSubida | date:'MMMM yyyy' }}
             </span>
           </div>
@@ -105,20 +116,24 @@
             {{ libro.titulo }}
           </h1>
 
-          <p class="text-lg text-marino-400 font-normal mb-6" *ngIf="libro.autor">
-            Por {{ libro.autor }}
-          </p>
-
-          <div class="flex flex-wrap items-center gap-x-8 gap-y-3 mb-8 text-sm text-marino-400">
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-1 mb-4 text-sm text-marino-400">
             <div class="flex items-center gap-2" *ngIf="libro.autor">
-              <span class="material-symbols-outlined text-marino-300 text-[20px]">person</span>
+              <span class="material-symbols-outlined text-marino-300 text-[18px]">person</span>
               <span>{{ libro.autor }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-marino-300 text-[20px]">calendar_today</span>
+              <span class="material-symbols-outlined text-marino-300 text-[18px]">calendar_today</span>
               <span>Subido el {{ libro.fechaSubida | date:'dd/MM/yyyy' }}</span>
             </div>
           </div>
+
+          <!-- Sinopsis, en el espacio antes vacío -->
+          <p class="text-sm text-justify text-marino-600 leading-relaxed mb-6 max-w-xl" *ngIf="libro.descripcion">
+            {{ libro.descripcion }}
+          </p>
+          <p class="text-sm text-marino-300 italic mb-6" *ngIf="!libro.descripcion">
+            Este libro no tiene descripción disponible.
+          </p>
 
           <div class="flex flex-wrap gap-3 mt-auto">
             <a
@@ -131,7 +146,7 @@
             </a>
             <button
               (click)="descargarPdf()"
-              class="cursor-pointer bg-transparent border border-ambar-500 text-ambar-600 text-sm font-semibold px-7 py-3 rounded-lg hover:bg-ambar-500/10 transition-all active:scale-95 flex items-center gap-2"
+              class="cursor-pointer bg-ambar-400 border border-ambar-500 text-gray-700 text-sm font-semibold px-7 py-3 rounded-lg hover:bg-ambar-300 transition-all active:scale-95 flex items-center gap-2"
             >
               <span class="material-symbols-outlined text-[20px]">download</span>
               Descargar PDF
@@ -140,10 +155,10 @@
               (click)="toggleFavorito()"
               [disabled]="cargandoFavorito"
               class="cursor-pointer w-12 h-12 rounded-lg transition-all active:scale-95 flex items-center justify-center shadow-sm disabled:opacity-60"
-              [ngClass]="esFavorito ? 'bg-ambar-500 text-white hover:bg-ambar-600' : 'bg-marino-50 text-marino-700 hover:bg-marino-100'"
+              [ngClass]="esFavorito ? 'bg-ambar-500 text-white hover:bg-ambar-600' : 'bg-marino-200 text-marino-700 hover:bg-marino-300'"
               [title]="esFavorito ? 'Quitar de guardados' : 'Guardar libro'"
             >
-              <span class="material-symbols-outlined" [style.font-variation-settings]="esFavorito ? '\'FILL\' 1' : '\'FILL\' 0'">
+              <span class="material-symbols-outlined">
                 {{ esFavorito ? 'bookmark' : 'bookmark_add' }}
               </span>
             </button>
@@ -151,78 +166,29 @@
         </div>
       </section>
 
-      <!-- Cuerpo: tabs + panel lateral -->
+      <!-- Cuerpo: cita estática + panel lateral -->
       <section class="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-        <!-- Tabs -->
-        <div class="lg:col-span-8">
-          <div class="flex border-b border-marino-100 mb-6 overflow-x-auto">
-            <button
-              (click)="cambiarTab('sinopsis')"
-              class="cursor-pointer px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors"
-              [ngClass]="tabActiva === 'sinopsis' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
-            >
-              Sinopsis
-            </button>
-            <button
-              (click)="cambiarTab('contenido')"
-              class="cursor-pointer px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors"
-              [ngClass]="tabActiva === 'contenido' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
-            >
-              Tabla de contenido
-            </button>
-            <button
-              (click)="cambiarTab('citas')"
-              class="cursor-pointer px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors"
-              [ngClass]="tabActiva === 'citas' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
-            >
-              Citar este libro
-            </button>
+        <!-- Cita, estática, sin pestañas -->
+        <div class="lg:col-span-8 pt-1">
+          <h3 class="text-xs font-semibold text-ambar-500 uppercase tracking-wider mb-3">Citar este libro</h3>
+          <div class="bg-white p-4 rounded border shadow-sm border-marino-200/60 text-sm font-mono text-marino-700">
+            {{ libro.autor || 'Autor desconocido' }}. <em>{{ libro.titulo }}</em>.
+            Biblioteca de Prácticas; {{ libro.fechaSubida | date:'yyyy' }}.
           </div>
-
-          <!-- Tab: Sinopsis -->
-          <div *ngIf="tabActiva === 'sinopsis'" class="text-marino-600/90 text-base leading-relaxed">
-            <p *ngIf="libro.descripcion">{{ libro.descripcion }}</p>
-            <p class="text-sm text-marino-400 italic" *ngIf="!libro.descripcion">
-              Este libro no tiene descripción disponible.
-            </p>
-          </div>
-
-          <!-- Tab: Tabla de contenido -->
-          <div *ngIf="tabActiva === 'contenido'">
-            <ul *ngIf="libro.tablaContenido?.length" class="bg-white rounded border border-marino-100 shadow-sm divide-y divide-marino-50">
-              <li
-                *ngFor="let item of libro.tablaContenido"
-                class="flex items-center justify-between px-4 py-3 text-sm"
-              >
-                <span class="text-marino-700">{{ item.titulo }}</span>
-                <span class="text-marino-400 shrink-0 ml-4" *ngIf="item.pagina">Pág. {{ item.pagina }}</span>
-              </li>
-            </ul>
-
-            <div *ngIf="!libro.tablaContenido?.length" class="flex flex-col items-center justify-center py-16 text-marino-300 bg-white rounded-xl border border-dashed border-marino-100">
-              <span class="material-symbols-outlined text-4xl mb-2">construction</span>
-              <p class="text-sm">La tabla de contenido aún no está disponible para este libro.</p>
-            </div>
-          </div>
-
-          <!-- Tab: Citar -->
-          <div *ngIf="tabActiva === 'citas'">
-            <h3 class="text-sm font-semibold text-marino-800 mb-2">Cita sugerida</h3>
-            <div class="bg-white p-4 rounded border border-marino-100 shadow-sm text-sm font-mono text-marino-700 relative group">
-              {{ libro.autor || 'Autor desconocido' }}. <em>{{ libro.titulo }}</em>.
-              Biblioteca de Prácticas; {{ libro.fechaSubida | date:'yyyy' }}.
-            </div>
+          <div class="mt-4">
+            <app-aviso-legal variante="completo"></app-aviso-legal>
           </div>
         </div>
+        
 
         <!-- Panel lateral -->
-        <div class="lg:col-span-4 space-y-6">
+        <div class="lg:col-span-4 space-y-6 pt-8">
 
           <!-- Detalles -->
-          <div class="bg-white/80 backdrop-blur-lg rounded p-6 shadow-sm border border-marino-100">
+          <div class="bg-white/80 backdrop-blur-lg rounded p-6 shadow-sm border border-marino-200/60 ">
             <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-full bg-marino-50 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-marino-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-marino-700">info</span>
               </div>
               <h3 class="font-display text-lg font-semibold text-marino-900">Detalles</h3>
@@ -238,90 +204,91 @@
                 <dd class="text-marino-900 font-medium text-right">{{ libro.autor }}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-marino-400">Publicado</dt>
+                <dt class="text-marino-400">Subido</dt>
                 <dd class="text-marino-900 font-medium text-right">{{ libro.fechaSubida | date:'dd/MM/yyyy' }}</dd>
               </div>
+              <div class="flex justify-between" *ngIf="libro.numeroPaginas">
+                <dt class="text-marino-400">Páginas</dt>
+                <dd class="text-marino-900 font-medium text-right">{{ libro.numeroPaginas }}</dd>
+              </div>
               <div class="flex justify-between">
-                <dt class="text-marino-400">Descargas</dt>
-                <dd class="text-marino-900 font-medium text-right">{{ libro.contadorDescargas }}</dd>
+                <dt class="text-marino-400">Tamaño</dt>
+                <dd class="text-marino-900 font-medium text-right">{{ formatearTamano(libro.tamanoBytes) }}</dd>
               </div>
             </dl>
           </div>
 
-          <!-- Acciones rápidas -->
-          <div class="bg-white rounded p-6 border border-marino-100 shadow-sm ">
-            <h3 class="text-xs font-semibold text-marino-400 uppercase tracking-wider mb-4">Acciones rápidas</h3>
-            <div class="space-y-2">
-              <button
-                (click)="descargarPdf()"
-                class="flex items-center gap-3 text-sm text-marino-700 hover:text-ambar-600 hover:bg-marino-50/60 rounded-lg px-3 py-2.5 -mx-3 transition-colors cursor-pointer w-full text-left"
-              >
-                <span class="material-symbols-outlined text-[20px]">download</span>
-                Descargar PDF
-              </button>
-              <a
-                [routerLink]="['/']"
-                [queryParams]="{ categoria: libro.categoriaId }"
-                class="flex items-center gap-3 text-sm text-marino-700 hover:text-ambar-600 hover:bg-marino-50/60 rounded-lg px-3 py-2.5 -mx-3 transition-colors"
-              >
-                <span class="material-symbols-outlined text-[20px]">grid_view</span>
-                Ver más libros de esta categoría
-              </a>
-            </div>
-          </div>
         </div>
       </section>
 
-      <!-- Modal de vista previa -->
-      <div
-        *ngIf="mostrarVistaPrevia"
-        class="fixed inset-0 bg-marino-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        (click)="cerrarVistaPrevia()"
-      >
-        <div
-          class="relative max-w-lg w-full max-h-[90vh] flex flex-col items-center"
-          (click)="$event.stopPropagation()"
-        >
-          <button
-            (click)="cerrarVistaPrevia()"
-            class="absolute -top-10 right-0 text-white hover:text-ambar-400 transition-colors"
+      <!-- Más de esta categoría -->
+      <section class="mt-14" *ngIf="librosRelacionados.length > 0">
+        <h2 class="font-display text-xl font-semibold text-marino-900 mb-5 border-t border-marino-100 pt-8">
+          Más de esta categoría
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
+          <a
+            *ngFor="let rel of librosRelacionados"
+            [routerLink]="['/libro', rel.id]"
+            class="flex flex-col gap-2 group"
           >
-            <span class="material-symbols-outlined text-3xl">close</span>
-          </button>
-
-        <div class="rounded-xl overflow-hidden shadow-2xl bg-white max-h-[80vh] overflow-y-auto flex flex-col gap-1">
-          <ng-container *ngIf="libro?.paginasPreview?.length; else soloPortadaModal">
-            <img
-              *ngFor="let pagina of libro!.paginasPreview"
-              [src]="urlArchivo(pagina)"
-              class="w-full block"
-            />
-          </ng-container>
-
-          <ng-template #soloPortadaModal>
-            <img
-              *ngIf="libro?.rutaPortada"
-              [src]="urlArchivo(libro!.rutaPortada!)"
-              [alt]="libro?.titulo"
-              class="max-h-[80vh] w-auto max-w-full object-contain block"
-            />
             <div
-              *ngIf="!libro?.rutaPortada"
-              class="w-72 aspect-[2/3] flex items-center justify-center"
-              [ngClass]="colorPortada(libro!.id)"
+              class="relative w-full aspect-[3/4] rounded overflow-hidden shadow-lg border border-marino-200 group-hover:shadow-lg group-hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
+              [ngClass]="!rel.rutaPortada ? colorPortada(rel.id) : 'bg-marino-50'"
             >
-              <span class="font-display text-7xl font-semibold text-white/95">
-                {{ iniciales(libro!.titulo) }}
-              </span>
+              <img *ngIf="rel.rutaPortada" [src]="urlArchivo(rel.rutaPortada)" [alt]="rel.titulo" class="w-full h-full object-cover" />
+              <span *ngIf="!rel.rutaPortada" class="text-3xl font-bold text-white/90">{{ iniciales(rel.titulo) }}</span>
             </div>
-          </ng-template>
+            <h4 class="text-xs font-semibold text-marino-900 line-clamp-2 leading-tight">{{ rel.titulo }}</h4>
+          </a>
         </div>
-
-          <p class="text-center text-white/80 text-sm mt-3">
-            Primera página del documento — para ver el contenido completo, usa "Ver en línea"
-          </p>
-        </div>
-      </div>
+      </section>
     </main>
+  </div>
+
+  <!-- Modal de vista previa -->
+  <div
+    *ngIf="mostrarVistaPrevia"
+    class="fixed inset-0 bg-marino-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    (click)="cerrarVistaPrevia()"
+  >
+    <div
+      class="relative max-w-lg w-full max-h-[90vh] flex flex-col items-center"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        (click)="cerrarVistaPrevia()"
+        class="cursor-pointer absolute -top-10 right-0 text-white hover:text-ambar-400 transition-colors"
+      >
+        <span class="material-symbols-outlined text-3xl">close</span>
+      </button>
+
+      <div class="rounded-xl overflow-hidden shadow-2xl bg-white flex flex-col gap-1 max-h-[80vh] overflow-y-auto">
+        <ng-container *ngIf="libro?.paginasPreview?.length; else soloPortadaModal">
+          <img
+            *ngFor="let pagina of libro!.paginasPreview"
+            [src]="urlArchivo(pagina)"
+            class="w-full block"
+          />
+        </ng-container>
+        <ng-template #soloPortadaModal>
+          <img
+            *ngIf="libro?.rutaPortada"
+            [src]="urlArchivo(libro!.rutaPortada!)"
+            [alt]="libro?.titulo"
+            class="max-h-[80vh] w-auto max-w-full object-contain block"
+          />
+          <div
+            *ngIf="!libro?.rutaPortada"
+            class="w-72 aspect-[2/3] flex items-center justify-center"
+            [ngClass]="colorPortada(libro!.id)"
+          >
+            <span class="font-display text-7xl font-semibold text-white/95">
+              {{ iniciales(libro!.titulo) }}
+            </span>
+          </div>
+        </ng-template>
+      </div>
+    </div>
   </div>
 </div>

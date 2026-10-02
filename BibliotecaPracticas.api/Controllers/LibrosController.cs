@@ -14,10 +14,6 @@ namespace BibliotecaPracticas.api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
-        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
 
         public LibrosController(AppDbContext context, IWebHostEnvironment env)
         {
@@ -29,33 +25,13 @@ namespace BibliotecaPracticas.api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LibroDTO>>> GetLibros()
         {
-            var librosRaw = await _context.Libros
+            var libros = await _context.Libros
                 .Where(l => l.Activo && l.Categoria != null && l.Categoria.Activo)
                 .Include(l => l.Categoria)
+                .Include(l => l.Semestres)
                 .ToListAsync();
 
-            var libros = librosRaw.Select(l => new LibroDTO
-            {
-                Id = l.Id,
-                Titulo = l.Titulo,
-                Autor = l.Autor,
-                Descripcion = l.Descripcion,
-                RutaArchivo = l.RutaArchivo,
-                RutaPortada = l.RutaPortada,
-                PaginasPreview = l.PaginasPreview != null
-                    ? JsonSerializer.Deserialize<List<string>>(l.PaginasPreview, _jsonOptions)
-                    : null,
-                TablaContenido = l.TablaContenido != null
-                    ? JsonSerializer.Deserialize<List<ItemTablaContenidoDTO>>(l.TablaContenido, _jsonOptions)
-                    : null,
-                FechaSubida = l.FechaSubida,
-                CategoriaId = l.CategoriaId,
-                CategoriaNombre = l.Categoria != null ? l.Categoria.Nombre : null,
-                Activo = l.Activo,
-                ContadorDescargas = l.ContadorDescargas,
-            }).ToList();
-
-            return Ok(libros);
+            return Ok(libros.Select(LibroMapper.ToDto).ToList());
         }
 
         // GET: api/libros/todos
@@ -63,64 +39,27 @@ namespace BibliotecaPracticas.api.Controllers
         [Authorize]
         public async Task<ActionResult<IEnumerable<LibroDTO>>> GetTodosLosLibros()
         {
-            var librosRaw = await _context.Libros
+            var libros = await _context.Libros
                 .Include(l => l.Categoria)
+                .Include(l => l.Semestres)
                 .ToListAsync();
 
-            var libros = librosRaw.Select(l => new LibroDTO
-            {
-                Id = l.Id,
-                Titulo = l.Titulo,
-                Autor = l.Autor,
-                Descripcion = l.Descripcion,
-                RutaArchivo = l.RutaArchivo,
-                RutaPortada = l.RutaPortada,
-                PaginasPreview = l.PaginasPreview != null
-                    ? JsonSerializer.Deserialize<List<string>>(l.PaginasPreview, _jsonOptions)
-                    : null,
-                TablaContenido = l.TablaContenido != null
-                    ? JsonSerializer.Deserialize<List<ItemTablaContenidoDTO>>(l.TablaContenido, _jsonOptions)
-                    : null,
-                FechaSubida = l.FechaSubida,
-                CategoriaId = l.CategoriaId,
-                CategoriaNombre = l.Categoria != null ? l.Categoria.Nombre : null,
-                Activo = l.Activo,
-                ContadorDescargas = l.ContadorDescargas
-            }).ToList();
-
-            return Ok(libros);
+            return Ok(libros.Select(LibroMapper.ToDto).ToList());
         }
 
         // GET: api/libros/5
         [HttpGet("{id}")]
         public async Task<ActionResult<LibroDTO>> GetLibro(int id)
         {
-            var libro = await _context.Libros.Include(l => l.Categoria)
+            var libro = await _context.Libros
+                .Include(l => l.Categoria)
+                .Include(l => l.Semestres)
                 .FirstOrDefaultAsync(l => l.Id == id);
 
             if (libro == null)
                 return NotFound();
 
-            return Ok(new LibroDTO
-            {
-                Id = libro.Id,
-                Titulo = libro.Titulo,
-                Autor = libro.Autor,
-                Descripcion = libro.Descripcion,
-                RutaArchivo = libro.RutaArchivo,
-                RutaPortada = libro.RutaPortada,
-                PaginasPreview = libro.PaginasPreview != null
-                    ? System.Text.Json.JsonSerializer.Deserialize<List<string>>(libro.PaginasPreview, (System.Text.Json.JsonSerializerOptions?)null)
-                    : null,
-                TablaContenido = libro.TablaContenido != null
-                    ? System.Text.Json.JsonSerializer.Deserialize<List<ItemTablaContenidoDTO>>(libro.TablaContenido, _jsonOptions)
-                    : null,
-                FechaSubida = libro.FechaSubida,
-                CategoriaId = libro.CategoriaId,
-                CategoriaNombre = libro.Categoria?.Nombre,
-                Activo = libro.Activo,
-                ContadorDescargas = libro.ContadorDescargas
-            });
+            return Ok(LibroMapper.ToDto(libro));
         }
 
         // POST: api/libros
@@ -204,14 +143,23 @@ namespace BibliotecaPracticas.api.Controllers
                 UsuarioId = dto.UsuarioId,
                 FechaSubida = DateTime.UtcNow,
                 Activo = true,
-                PaginasPreview = rutasPaginas.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(rutasPaginas) : null,
+                PaginasPreview = rutasPaginas.Count > 0 ? JsonSerializer.Serialize(rutasPaginas) : null,
                 TablaContenido = !string.IsNullOrWhiteSpace(dto.TablaContenidoJson) ? dto.TablaContenidoJson : null,
+                NumeroPaginas = dto.NumeroPaginas,
+                TamanoBytes = dto.Archivo.Length,
             };
+
+            if (dto.SemestreIds != null && dto.SemestreIds.Count > 0)
+            {
+                libro.Semestres = await _context.Semestres
+                    .Where(s => dto.SemestreIds.Contains(s.Id))
+                    .ToListAsync();
+            }
 
             _context.Libros.Add(libro);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetLibro), new { id = libro.Id }, libro);
+            return CreatedAtAction(nameof(GetLibro), new { id = libro.Id }, LibroMapper.ToDto(libro));
         }
 
         // PUT: api/libros/5
@@ -219,7 +167,9 @@ namespace BibliotecaPracticas.api.Controllers
         [Authorize]
         public async Task<IActionResult> PutLibro(int id, [FromBody] LibroEditDTO dto)
         {
-            var libro = await _context.Libros.FindAsync(id);
+            var libro = await _context.Libros
+                .Include(l => l.Semestres)
+                .FirstOrDefaultAsync(l => l.Id == id);
             if (libro == null)
                 return NotFound();
 
@@ -227,6 +177,16 @@ namespace BibliotecaPracticas.api.Controllers
             libro.Autor = dto.Autor;
             libro.Descripcion = dto.Descripcion;
             libro.CategoriaId = dto.CategoriaId;
+
+            // null = no tocar los semestres; lista (incluso vacía) = reemplazarlos
+            if (dto.SemestreIds != null)
+            {
+                libro.Semestres.Clear();
+                var nuevos = await _context.Semestres
+                    .Where(s => dto.SemestreIds.Contains(s.Id))
+                    .ToListAsync();
+                foreach (var s in nuevos) libro.Semestres.Add(s);
+            }
 
             await _context.SaveChangesAsync();
 
@@ -270,7 +230,7 @@ namespace BibliotecaPracticas.api.Controllers
                 libro.RutaPortada = dto.RutaPortada;
 
             if (dto.PaginasPreview != null && dto.PaginasPreview.Count > 0 && string.IsNullOrWhiteSpace(libro.PaginasPreview))
-                libro.PaginasPreview = System.Text.Json.JsonSerializer.Serialize(dto.PaginasPreview);
+                libro.PaginasPreview = JsonSerializer.Serialize(dto.PaginasPreview);
 
             if (!string.IsNullOrWhiteSpace(dto.TablaContenidoJson) && string.IsNullOrWhiteSpace(libro.TablaContenido))
                 libro.TablaContenido = dto.TablaContenidoJson;
@@ -283,13 +243,13 @@ namespace BibliotecaPracticas.api.Controllers
         // POST: api/libros/5/subir-imagen-extraida
         [HttpPost("{id}/subir-imagen-extraida")]
         [Authorize]
-        public async Task<ActionResult<string>> SubirImagenExtraida(int id, [FromForm] IFormFile imagen, [FromForm] string tipo)
+        public async Task<ActionResult<string>> SubirImagenExtraida(int id, [FromForm] ImagenExtraidaDTO dto)
         {
             var libro = await _context.Libros.FindAsync(id);
             if (libro == null)
                 return NotFound();
 
-            var carpeta = tipo == "portada" ? "portadas" : "preview";
+            var carpeta = dto.Tipo == "portada" ? "portadas" : "preview";
             var carpetaDestino = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads", carpeta);
 
             if (!Directory.Exists(carpetaDestino))
@@ -300,11 +260,12 @@ namespace BibliotecaPracticas.api.Controllers
 
             using (var stream = new FileStream(rutaCompleta, FileMode.Create))
             {
-                await imagen.CopyToAsync(stream);
+                await dto.Imagen.CopyToAsync(stream);
             }
 
             return Ok(new { ruta = $"/uploads/{carpeta}/{nombreArchivo}" });
         }
+
         // POST: api/libros/5/registrar-descarga
         [HttpPost("{id}/registrar-descarga")]
         public async Task<IActionResult> RegistrarDescarga(int id)
@@ -318,23 +279,24 @@ namespace BibliotecaPracticas.api.Controllers
 
             return Ok(libro.ContadorDescargas);
         }
+
         // PUT: api/libros/5/reemplazar-pdf
         [HttpPut("{id}/reemplazar-pdf")]
         [Authorize]
         [RequestSizeLimit(150 * 1024 * 1024)]
-        public async Task<IActionResult> ReemplazarPdf(int id, [FromForm] IFormFile archivo)
+        public async Task<IActionResult> ReemplazarPdf(int id, [FromForm] ReemplazarPdfDTO dto)
         {
             var libro = await _context.Libros.FindAsync(id);
             if (libro == null)
                 return NotFound();
 
-            if (archivo == null || archivo.Length == 0)
+            if (dto.Archivo == null || dto.Archivo.Length == 0)
                 return BadRequest("Debes adjuntar un archivo PDF.");
 
-            if (Path.GetExtension(archivo.FileName).ToLower() != ".pdf")
+            if (Path.GetExtension(dto.Archivo.FileName).ToLower() != ".pdf")
                 return BadRequest("Solo se permiten archivos PDF.");
 
-            if (archivo.Length > 150 * 1024 * 1024)
+            if (dto.Archivo.Length > 150 * 1024 * 1024)
                 return BadRequest("El archivo no debe superar los 150MB.");
 
             // Borra el PDF anterior del disco
@@ -343,7 +305,7 @@ namespace BibliotecaPracticas.api.Controllers
                 System.IO.File.Delete(rutaAnterior);
 
             // Guarda el nuevo PDF
-            var nombreArchivo = $"{Guid.NewGuid()}{Path.GetExtension(archivo.FileName)}";
+            var nombreArchivo = $"{Guid.NewGuid()}{Path.GetExtension(dto.Archivo.FileName)}";
             var carpetaDestino = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads", "libros");
 
             if (!Directory.Exists(carpetaDestino))
@@ -353,7 +315,7 @@ namespace BibliotecaPracticas.api.Controllers
 
             using (var stream = new FileStream(rutaCompleta, FileMode.Create))
             {
-                await archivo.CopyToAsync(stream);
+                await dto.Archivo.CopyToAsync(stream);
             }
 
             libro.RutaArchivo = $"/uploads/libros/{nombreArchivo}";
