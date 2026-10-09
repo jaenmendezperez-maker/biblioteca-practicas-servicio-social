@@ -22,6 +22,15 @@ namespace BibliotecaPracticas.api.Models
         // Relación: un usuario puede subir varios libros
         public ICollection<Libro>? Libros { get; set; }
         public bool Activo { get; set; } = true;
+        public bool EmailVerificado { get; set; }
+        public string? CodigoVerificacionHash { get; set; }
+        public DateTime? CodigoExpira { get; set; }
+        public int IntentosCodigo { get; set; }
+        public DateTime? UltimoEnvioCodigo { get; set; }
+        public string? CodigoRecuperacionHash { get; set; }
+        public DateTime? CodigoRecuperacionExpira { get; set; }
+        public int IntentosRecuperacion { get; set; }
+        public DateTime? UltimoEnvioRecuperacion { get; set; }
     }
 
     public enum RolUsuario

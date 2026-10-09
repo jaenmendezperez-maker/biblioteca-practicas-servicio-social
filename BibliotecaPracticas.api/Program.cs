@@ -3,6 +3,7 @@ using BibliotecaPracticas.api.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer; // NUEVO
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens; // NUEVO
+using BibliotecaPracticas.api.Services; // NUEVO
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options =>
@@ -21,14 +22,15 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
+builder.Services.AddScoped<ICorreoService, CorreoService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirAngular", policy =>
     {
         policy.WithOrigins("http://localhost:4200")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .WithExposedHeaders("X-Total-Paginas", "X-Paginas-Fragmento");
     });
 });
 
@@ -66,6 +68,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("PermitirAngular");
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/uploads/libros", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+    await next();
+});
+app.UseStaticFiles();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();

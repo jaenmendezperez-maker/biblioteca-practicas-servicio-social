@@ -15,13 +15,25 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(credenciales: LoginRequest): Observable<AuthResponse> {
+   login(credenciales: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credenciales).pipe(
-      tap((respuesta) => {
-        localStorage.setItem(this.storageKey, JSON.stringify(respuesta));
-        this.usuarioActual.set(respuesta);
-      })
+      tap((respuesta) => this.guardarSesion(respuesta))
     );
+  }
+  
+  verificarCorreo(email: string, codigo: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/verificar-correo`, { email, codigo })
+      .pipe(tap((respuesta) => this.guardarSesion(respuesta)));
+  }
+
+  reenviarCodigo(email: string): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/reenviar-codigo`, { email });
+  }
+
+  private guardarSesion(respuesta: AuthResponse): void {
+    localStorage.setItem(this.storageKey, JSON.stringify(respuesta));
+    this.usuarioActual.set(respuesta);
   }
 
   logout(): void {
@@ -44,5 +56,16 @@ export class AuthService {
 
   obtenerPerfil(): Observable<{ id: number; email: string; nombreCompleto: string; rol: string }> {
     return this.http.get<{ id: number; email: string; nombreCompleto: string; rol: string }>(`${this.apiUrl}/me`);
+  }
+  solicitarRecuperacion(email: string): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/solicitar-recuperacion`, { email });
+  }
+
+  restablecerPassword(email: string, codigo: string, nuevaPassword: string): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/restablecer-password`, {
+      email,
+      codigo,
+      nuevaPassword
+    });
   }
 }

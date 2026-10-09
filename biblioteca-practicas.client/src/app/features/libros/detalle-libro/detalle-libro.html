@@ -23,7 +23,7 @@
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-marino-400 text-[20px]">search</span>
           <input
             type="text"
-            placeholder="Buscar otro libro..."
+            placeholder="Buscar otro artículo..."
             class="w-full bg-white border border-marino-100 rounded-full py-2.5 pl-11 pr-4 text-sm text-marino-900 placeholder-marino-400/60 focus:outline-none focus:ring-2 focus:ring-ambar-500 focus:border-transparent transition-shadow"
           />
         </div>
@@ -40,7 +40,7 @@
     <!-- Cargando -->
     <div *ngIf="cargando" class="flex flex-col items-center justify-center py-24 text-marino-400">
       <div class="w-8 h-8 border-4 border-marino-100 border-t-ambar-500 rounded-full animate-spin mb-4"></div>
-      <p>Cargando libro...</p>
+      <p>Cargando artículo...</p>
     </div>
 
     <!-- Error -->
@@ -52,9 +52,9 @@
     <!-- No encontrado -->
     <div *ngIf="libroNoEncontrado" class="flex flex-col items-center justify-center py-24 px-4 text-center">
       <span class="material-symbols-outlined text-6xl text-marino-200 mb-4">search_off</span>
-      <h2 class="font-display text-2xl font-semibold text-marino-900 mb-2">Libro no encontrado</h2>
+      <h2 class="font-display text-2xl font-semibold text-marino-900 mb-2">Artículo no encontrado</h2>
       <p class="text-sm text-marino-400 mb-6 max-w-sm">
-        Este libro no existe o fue dado de baja. Puede que el enlace esté roto o el libro ya no esté disponible.
+        Este artículo no existe o fue dado de baja. Puede que el enlace esté roto o el artículo ya no esté disponible.
       </p>
       <a routerLink="/" class="bg-marino-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-marino-600 transition-colors">
         Volver al catálogo
@@ -136,14 +136,13 @@
           </p>
 
           <div class="flex flex-wrap gap-3 mt-auto">
-            <a
-              [href]="urlArchivo(libro.rutaArchivo)"
-              target="_blank"
-              class="bg-marino-700 text-white text-sm font-semibold px-7 py-3 rounded-lg shadow-sm hover:bg-marino-600 transition-all active:scale-95 flex items-center gap-2"
+            <button
+              (click)="verEnLinea()"
+              class="cursor-pointer bg-marino-700 text-white text-sm font-semibold px-7 py-3 rounded-lg shadow-sm hover:bg-marino-600 transition-all active:scale-95 flex items-center gap-2"
             >
               <span class="material-symbols-outlined text-[20px]">menu_book</span>
               Ver en línea
-            </a>
+            </button>
             <button
               (click)="descargarPdf()"
               class="cursor-pointer bg-ambar-400 border border-ambar-500 text-gray-700 text-sm font-semibold px-7 py-3 rounded-lg hover:bg-ambar-300 transition-all active:scale-95 flex items-center gap-2"
@@ -288,6 +287,82 @@
             </span>
           </div>
         </ng-template>
+      </div>
+    </div>
+  </div>
+    <!-- Lector parcial (sin sesión) -->
+  <div *ngIf="lectorAbierto" class="fixed inset-0 bg-marino-900/70 backdrop-blur-sm z-50 flex flex-col">
+
+    <div class="bg-white px-4 py-3 flex items-center justify-between gap-3 border-b border-marino-100">
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-marino-900 truncate">{{ libro?.titulo }}</p>
+        <p *ngIf="paginasTotal > 0" class="text-xs text-marino-400">
+          Vista parcial: {{ paginasFragmento }} de {{ paginasTotal }} páginas
+        </p>
+      </div>
+      <button
+        (click)="cerrarLector()"
+        class="cursor-pointer text-marino-400 hover:text-marino-700 p-1 shrink-0"
+        title="Cerrar"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="flex-1 bg-marino-50 relative min-h-0">
+      <div *ngIf="cargandoFragmento" class="absolute inset-0 flex flex-col items-center justify-center text-marino-400">
+        <div class="w-8 h-8 border-4 border-marino-100 border-t-ambar-500 rounded-full animate-spin mb-3"></div>
+        <p class="text-sm">Preparando vista parcial...</p>
+      </div>
+
+      <div *ngIf="errorFragmento" class="absolute inset-0 flex flex-col items-center justify-center text-red-600 px-6 text-center">
+        <span class="material-symbols-outlined text-4xl mb-2">error</span>
+        <p class="text-sm">{{ errorFragmento }}</p>
+      </div>
+
+      <iframe
+        *ngIf="urlFragmento"
+        [src]="urlFragmento"
+        class="w-full h-full border-0"
+        title="Vista parcial del libro"
+      ></iframe>
+            <div
+        *ngIf="avisoVisible && urlFragmento"
+        class="aviso-lector absolute bottom-5 right-5 left-5 sm:left-auto sm:w-80 bg-white rounded-xl shadow-[0_12px_40px_rgba(18,38,71,0.25)] border border-marino-100 p-5"
+      >
+        <button
+          (click)="cerrarAviso()"
+          class="cursor-pointer absolute top-3 right-3 text-marino-300 hover:text-marino-700 transition-colors"
+          title="Cerrar"
+        >
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+
+        <div class="w-10 h-10 rounded-full bg-ambar-500/15 text-ambar-600 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-[22px]">lock_open</span>
+        </div>
+
+        <h4 class="font-display text-base font-semibold text-marino-900 mb-1">
+          ¿Quieres seguir leyendo?
+        </h4>
+        <p class="text-[13px] text-marino-500 leading-relaxed mb-4">
+          Te faltan {{ paginasTotal - paginasFragmento }} páginas. Inicia sesión con tu correo de la BUAP para leer el artículo completo y descargarlo.
+        </p>
+
+        <div class="flex items-center gap-3">
+          <a
+            routerLink="/login"
+            class="flex-1 text-center text-sm font-medium bg-marino-700 text-white px-4 py-2 rounded-lg hover:bg-marino-600 transition-colors"
+          >
+            Iniciar sesión
+          </a>
+          <a
+            routerLink="/registro"
+            class="text-sm font-medium text-ambar-600 hover:text-ambar-700 transition-colors"
+          >
+            Crear cuenta
+          </a>
+        </div>
       </div>
     </div>
   </div>

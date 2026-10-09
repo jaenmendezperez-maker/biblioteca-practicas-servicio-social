@@ -37,7 +37,7 @@
           class="px-5 py-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer"
           [ngClass]="tabActiva === 'libros' ? 'text-ambar-600 border-ambar-500' : 'text-marino-400 border-transparent hover:text-marino-700'"
         >
-          Libros
+          Artículos
         </button>
         <button
           (click)="cambiarTab('usuarios')"
@@ -255,17 +255,6 @@
           />
         </div>
 
-        <div class="flex items-center justify-end mb-4">
-          <button
-            (click)="reprocesarLibrosAntiguos()"
-            [disabled]="reprocesando"
-            class="text-sm font-medium text-ambar-600 hover:text-ambar-700 flex items-center gap-2 disabled:opacity-50"
-          >
-            <span class="material-symbols-outlined text-[18px]">refresh</span>
-            {{ reprocesando ? 'Reprocesando ' + progresoReproceso.actual + '/' + progresoReproceso.total + '...' : 'Reprocesar libros antiguos (portadas/índice)' }}
-          </button>
-        </div>
-
         <div class="bg-white rounded border border-marino-200 divide-y divide-marino-50 overflow-hidden">
           <div *ngFor="let libro of librosPaginadosAdmin" class="p-4">
             <div class="flex items-center justify-between gap-3">
@@ -397,7 +386,7 @@
       (click)="$event.stopPropagation()"
     >
       <h3 class="font-display text-lg font-semibold text-marino-900 mb-4">
-        Editar libro
+        Editar artículo 
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-registro',
@@ -28,7 +27,6 @@ export class RegistroComponent {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService,
     private router: Router
   ) {}
 
@@ -50,6 +48,13 @@ export class RegistroComponent {
       return;
     }
 
+    const correo = this.email.trim().toLowerCase();
+    const dominiosPermitidos = ['@alumno.buap.mx', '@correo.buap.mx', '@buap.mx'];
+    if (!dominiosPermitidos.some(dominio => correo.endsWith(dominio))){
+      this.error = 'Usa tu correo instutucional de la BUAP para registrarte.';
+      return;
+    }
+
     this.cargando = true;
 
     this.http.post(this.apiUrl, {
@@ -59,22 +64,21 @@ export class RegistroComponent {
       rol: 2 // Alumno — el backend lo ignora y fuerza este valor de todas formas
     }).subscribe({
       next: () => {
-        // Registro exitoso: inicia sesión automáticamente
-        this.authService.login({ email: this.email, password: this.password }).subscribe({
-          next: () => {
-            this.cargando = false;
-            this.router.navigate(['/']);
-          },
-          error: () => {
-            this.cargando = false;
-            this.router.navigate(['/login']);
-          }
+        this.cargando = false;
+        this.router.navigate(['/verificar-correo'], {
+          queryParams: { email: this.email.trim().toLowerCase() }
         });
       },
       error: (err) => {
+        if (err.status === 400 && typeof err.error === 'string' && err.error.includes('falta verificarlo')) {
+          this.router.navigate(['/verificar-correo'], {
+            queryParams: { email: this.email.trim().toLowerCase(), origen: 'login' }
+          });
+          return;
+        }
         this.cargando = false;
-        if (err.status === 400) {
-          this.error = 'Ya existe una cuenta con ese correo.';
+        if (err.status === 400 && typeof err.error === 'string' && err.error) {
+          this.error = err.error;
         } else {
           this.error = 'Ocurrió un error al crear la cuenta. Intenta de nuevo.';
         }

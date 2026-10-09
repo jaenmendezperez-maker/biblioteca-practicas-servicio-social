@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 import { Libro } from '../../../core/models/libro.model';
 import { Categoria } from '../../../core/models/categoria.model';
 import { LibroService } from '../../../core/services/libro.service';
 import { CategoriaService } from '../../../core/services/categoria.service';
 import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.component';
 import { SidebarService } from '../../../core/services/sidebar.service';
+
 
 @Component({
   selector: 'app-lista-libros',
@@ -37,7 +39,9 @@ export class ListaLibrosComponent implements OnInit {
     private libroService: LibroService,
     private categoriaService: CategoriaService,
     private route: ActivatedRoute,
-    public sidebarService: SidebarService
+    private router: Router,
+    public sidebarService: SidebarService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -147,17 +151,33 @@ export class ListaLibrosComponent implements OnInit {
     return `http://localhost:5250/api/archivos/${carpeta}/${nombreArchivo}`;
   }
   
-  descargar(libro: Libro): void {
-    const url = this.urlArchivo(libro.rutaArchivo) + '?descargar=true';
-    const a = document.createElement('a');
-    a.href = url;
-    a.click();
+  ver(libro: Libro): void {
+    if (!this.authService.estaAutenticado()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.libroService.verPdf(libro.rutaArchivo).subscribe({
+      error: (err) => {
+        if (err.status !== 401) alert('No se pudo abrir el archivo. Intenta de nuevo.');
+      }
+    });
+  }
 
-    this.libroService.registrarDescarga(libro.id).subscribe({
-      next: (nuevoContador) => {
-        libro.contadorDescargas = nuevoContador;
+  descargar(libro: Libro): void {
+    if (!this.authService.estaAutenticado()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.libroService.descargarPdf(libro.rutaArchivo, `${libro.titulo}.pdf`).subscribe({
+      next: () => {
+        this.libroService.registrarDescarga(libro.id).subscribe({
+          next: (nuevo) => (libro.contadorDescargas = nuevo),
+          error: (err) => console.error('No se pudo registrar la descarga', err)
+        });
       },
-      error: (err) => console.error('No se pudo registrar la descarga', err)
+      error: (err) => {
+        if (err.status !== 401) alert('No se pudo descargar el archivo. Intenta de nuevo.');
+      }
     });
   }
 }

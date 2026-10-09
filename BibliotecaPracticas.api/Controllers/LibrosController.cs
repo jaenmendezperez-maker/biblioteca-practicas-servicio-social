@@ -36,7 +36,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // GET: api/libros/todos
         [HttpGet("todos")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<LibroDTO>>> GetTodosLosLibros()
         {
             var libros = await _context.Libros
@@ -64,7 +64,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // POST: api/libros
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [RequestSizeLimit(150 * 1024 * 1024)]
         public async Task<ActionResult<LibroDTO>> PostLibro([FromForm] LibroCreateDTO dto)
         {
@@ -164,7 +164,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // PUT: api/libros/5
         [HttpPut("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutLibro(int id, [FromBody] LibroEditDTO dto)
         {
             var libro = await _context.Libros
@@ -195,7 +195,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // PATCH: api/libros/5/estado
         [HttpPatch("{id}/estado")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool activo)
         {
             var libro = await _context.Libros.FindAsync(id);
@@ -219,7 +219,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // PATCH: api/libros/5/metadatos-extraidos
         [HttpPatch("{id}/metadatos-extraidos")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ActualizarMetadatosExtraidos(int id, [FromBody] MetadatosExtraidosDTO dto)
         {
             var libro = await _context.Libros.FindAsync(id);
@@ -242,7 +242,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // POST: api/libros/5/subir-imagen-extraida
         [HttpPost("{id}/subir-imagen-extraida")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<string>> SubirImagenExtraida(int id, [FromForm] ImagenExtraidaDTO dto)
         {
             var libro = await _context.Libros.FindAsync(id);
@@ -282,7 +282,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // PUT: api/libros/5/reemplazar-pdf
         [HttpPut("{id}/reemplazar-pdf")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [RequestSizeLimit(150 * 1024 * 1024)]
         public async Task<IActionResult> ReemplazarPdf(int id, [FromForm] ReemplazarPdfDTO dto)
         {

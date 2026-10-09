@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Libro } from '../../../core/models/libro.model';
 import { LibroService } from '../../../core/services/libro.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,13 +11,16 @@ import { FavoritoService } from '../../../core/services/favorito.service';
 import { AvisoLegalComponent } from '../../../shared/components/aviso-legal/aviso-legal';
 
 
+
+
 @Component({
   selector: 'app-detalle-libro',
   standalone: true,
   imports: [CommonModule, RouterLink, SidebarComponent, AvisoLegalComponent],
-  templateUrl: './detalle-libro.html'
+  templateUrl: './detalle-libro.html',
+  styleUrl: './detalle-libro.scss'
 })
-export class DetalleLibroComponent implements OnInit {
+export class DetalleLibroComponent implements OnInit, OnDestroy {
   libro: Libro | null = null;
   cargando = true;
   error = '';
@@ -24,6 +28,15 @@ export class DetalleLibroComponent implements OnInit {
   mostrarVistaPrevia = false;
   librosRelacionados: Libro[] = [];
   libroNoEncontrado = false;
+  lectorAbierto = false;
+  cargandoFragmento = false;
+  errorFragmento = '';
+  urlFragmento: SafeResourceUrl | null = null;
+  paginasFragmento = 0;
+  paginasTotal = 0;
+  private urlFragmentoBlob: string | null = null;
+  avisoVisible = false;
+  private temporizadorAviso: ReturnType<typeof setTimeout> | null = null;
 
   private coloresPortada = [
     'bg-marino-700',
@@ -44,7 +57,9 @@ export class DetalleLibroComponent implements OnInit {
     private libroService: LibroService,
     public authService: AuthService,
     public sidebarService: SidebarService,
-    private favoritoService: FavoritoService
+    private favoritoService: FavoritoService,
+    private router: Router,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -74,6 +89,13 @@ export class DetalleLibroComponent implements OnInit {
         this.cargando = false;
         this.verificarFavorito(data.id);
         this.cargarRelacionados(data.categoriaId, data.id);
+        // Si viene de "Ver" en el catálogo sin sesión, abre el lector parcial
+        if (
+          this.route.snapshot.queryParamMap.get('leer') === 'fragmento' &&
+          !this.authService.estaAutenticado()
+        ) {
+          this.abrirFragmento();
+        }
       },
       error: (err) => {
         console.error(err);
@@ -108,20 +130,105 @@ export class DetalleLibroComponent implements OnInit {
     return `http://localhost:5250/api/archivos/${carpeta}/${nombreArchivo}`;
   }
   
-  descargarPdf(): void {
+  verEnLinea(): void {
     if (!this.libro) return;
 
-    const url = this.urlArchivo(this.libro.rutaArchivo) + '?descargar=true';
-    const a = document.createElement('a');
-    a.href = url;
-    a.click();
+    if (!this.authService.estaAutenticado()) {
+      this.abrirFragmento();
+      return;
+    }
 
-    this.libroService.registrarDescarga(this.libro.id).subscribe({
-      next: (nuevoContador) => {
-        if (this.libro) this.libro.contadorDescargas = nuevoContador;
-      },
-      error: (err) => console.error('No se pudo registrar la descarga', err)
+    this.libroService.verPdf(this.libro.rutaArchivo).subscribe({
+      error: (err) => this.avisarErrorPdf(err.status)
     });
+  }
+
+  abrirFragmento(): void {
+    if (!this.libro) return;
+    document.body.style.overflow = 'hidden';
+
+    this.lectorAbierto = true;
+    this.cargandoFragmento = true;
+    this.errorFragmento = '';
+    this.liberarFragmento();
+    this.avisoVisible = false;
+
+    this.libroService.obtenerFragmento(this.libro.rutaArchivo).subscribe({
+      next: ({ blob, total, incluidas }) => {
+        this.urlFragmentoBlob = URL.createObjectURL(blob);
+        // Es un blob creado aquí mismo, no contenido de otra persona
+        this.urlFragmento = this.sanitizer.bypassSecurityTrustResourceUrl(this.urlFragmentoBlob);
+        this.paginasTotal = total;
+        this.paginasFragmento = incluidas;
+        this.cargandoFragmento = false;
+        this.programarAviso();
+      },
+      error: () => {
+        this.errorFragmento = 'No se pudo cargar la vista parcial de este libro.';
+        this.cargandoFragmento = false;
+      }
+    });
+  }
+
+  cerrarLector(): void {
+    this.lectorAbierto = false;
+    document.body.style.overflow = '';
+    this.cancelarAviso();
+    this.liberarFragmento();
+  }
+
+  private liberarFragmento(): void {
+    if (this.urlFragmentoBlob) {
+      URL.revokeObjectURL(this.urlFragmentoBlob);
+      this.urlFragmentoBlob = null;
+    }
+    this.urlFragmento = null;
+  }
+
+  private programarAviso(): void {
+    this.cancelarAviso();
+    this.temporizadorAviso = setTimeout(() => (this.avisoVisible = true), 5000);
+  }
+
+  private cancelarAviso(): void {
+    if (this.temporizadorAviso) {
+      clearTimeout(this.temporizadorAviso);
+      this.temporizadorAviso = null;
+    }
+    this.avisoVisible = false;
+  }
+
+  cerrarAviso(): void {
+    this.avisoVisible = false;
+  }
+
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+    this.cancelarAviso();
+    this.liberarFragmento();
+  }
+
+  descargarPdf(): void {
+    if (!this.libro) return;
+    if (!this.authService.estaAutenticado()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    const libro = this.libro;
+    this.libroService.descargarPdf(libro.rutaArchivo, `${libro.titulo}.pdf`).subscribe({
+      next: () => {
+        this.libroService.registrarDescarga(libro.id).subscribe({
+          next: (nuevo) => (libro.contadorDescargas = nuevo),
+          error: (err) => console.error('No se pudo registrar la descarga', err)
+        });
+      },
+      error: (err) => this.avisarErrorPdf(err.status)
+    });
+  }
+
+  private avisarErrorPdf(status: number): void {
+    if (status === 401) return;
+    alert('No se pudo abrir el archivo. Intenta de nuevo.');
   }
 
   abrirVistaPrevia(): void {

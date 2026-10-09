@@ -5,13 +5,19 @@ obj/
 *.suo
 .vs/
 
+# ===== Secretos (configuración local con valores reales) =====
+.env
+**/appsettings.Development.json
+
+# ===== Archivos generados o subidos por usuarios =====
+**/wwwroot/uploads/
+**/fragmentos/
+
 # ===== Angular / Node =====
 node_modules/
 dist/
 .angular/
-
-# ===== Variables de entorno =====
-.env
+out-tsc/
 
 # ===== Docker =====
 # (postgres_data es un volumen de Docker, no una carpeta local, así que no necesita entrada aquí)
@@ -23,5 +29,3 @@ dist/
 # ===== Sistema operativo =====
 .DS_Store
 Thumbs.db
-
-BibliotecaPracticas.api/wwwroot/uploads/

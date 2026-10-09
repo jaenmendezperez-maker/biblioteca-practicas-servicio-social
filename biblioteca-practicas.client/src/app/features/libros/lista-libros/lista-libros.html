@@ -29,7 +29,7 @@
         </div>
 
         <span class="text-xs text-marino-400 font-medium hidden lg:block whitespace-nowrap">
-          {{ libros.length }} libro{{ libros.length !== 1 ? 's' : '' }} en la biblioteca
+          {{ libros.length }} artículo{{ libros.length !== 1 ? 's' : '' }} en la biblioteca
         </span>
       </div>
     </header>
@@ -82,7 +82,7 @@
                 {{ principal.nombre }}
               </h3>
               <p class="text-sm text-white/70 max-w-md">
-                Consulta los libros de prácticas disponibles en esta área de estudio.
+                Consulta los artículos de prácticas disponibles en esta área de estudio.
               </p>
             </div>
           </button>
@@ -132,7 +132,7 @@
       <!-- Estado: cargando -->
       <div *ngIf="cargando" class="flex flex-col items-center justify-center py-24 text-marino-400">
         <div class="w-8 h-8 border-4 border-marino-100 border-t-ambar-500 rounded-full animate-spin mb-4"></div>
-        <p>Cargando libros...</p>
+        <p>Cargando artículos...</p>
       </div>
 
       <!-- Estado: error -->
@@ -210,13 +210,12 @@
 
             <!-- Acciones -->
             <div class="flex gap-2 px-0.5">
-              <a
-                [href]="urlArchivo(libro.rutaArchivo)"
-                target="_blank"
-                class="flex-1 border border-marino-100 text-marino-700 text-xs font-medium py-2.5 rounded-lg text-center hover:bg-marino-50 transition-colors"
+              <button
+                (click)="ver(libro)"
+                class="cursor-pointer flex-1 border border-marino-100 text-marino-700 text-xs font-medium py-2.5 rounded-lg text-center hover:bg-marino-50 transition-colors"
               >
                 Ver
-              </a>
+              </button>
               <button
                 (click)="descargar(libro); $event.stopPropagation()"
                 class="cursor-pointer flex-1 bg-marino-700 text-white text-xs font-medium py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-marino-600 transition-colors shadow-sm"

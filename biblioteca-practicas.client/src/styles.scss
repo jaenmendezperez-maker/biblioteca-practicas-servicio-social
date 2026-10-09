@@ -73,3 +73,8 @@
     'GRAD' 0,
     'opsz' 24;
 }
+/* Oculta el ojito nativo de Edge para que solo se vea el del sistema */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}

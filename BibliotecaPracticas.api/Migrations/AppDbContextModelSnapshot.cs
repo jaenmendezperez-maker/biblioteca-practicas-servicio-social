@@ -225,13 +225,34 @@ namespace BibliotecaPracticas.api.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("CodigoExpira")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CodigoRecuperacionExpira")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CodigoRecuperacionHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CodigoVerificacionHash")
+                        .HasColumnType("text");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<bool>("EmailVerificado")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("IntentosCodigo")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IntentosRecuperacion")
+                        .HasColumnType("integer");
 
                     b.Property<string>("NombreCompleto")
                         .IsRequired()
@@ -244,6 +265,12 @@ namespace BibliotecaPracticas.api.Migrations
 
                     b.Property<int>("Rol")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UltimoEnvioCodigo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UltimoEnvioRecuperacion")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

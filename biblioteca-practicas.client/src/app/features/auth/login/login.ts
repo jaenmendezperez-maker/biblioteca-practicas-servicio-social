@@ -18,6 +18,7 @@ export class LoginComponent {
   error = '';
   mostrarPassword = false;
   anioActual = new Date().getFullYear();
+  mensajePasswordActualizada = false;
 
   constructor(
     private authService: AuthService,
@@ -38,6 +39,12 @@ export class LoginComponent {
       },
       error: (err) => {
         this.cargando = false;
+        if (err.status === 403) {
+          this.router.navigate(['/verificar-correo'], {
+            queryParams: { email: this.email.trim().toLowerCase(), origen: 'login' }
+          });
+          return;
+        }
         if (err.status === 401) {
           this.error = 'Email o contraseña incorrectos.';
         } else {
@@ -50,6 +57,7 @@ export class LoginComponent {
   ngOnInit(): void {
   this.route.queryParams.subscribe((params) => {
     this.mensajeSesionExpirada = params['motivo'] === 'sesion-expirada';
+    this.mensajePasswordActualizada = params['motivo'] === 'password-actualizada';
   });
 }
 }

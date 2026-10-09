@@ -64,6 +64,10 @@
         <div *ngIf="error" class="bg-red-400 text-white text-sm rounded px-3 py-2.5 mb-4">
           {{ error }}
         </div>
+        
+        <div *ngIf="mensajePasswordActualizada" class="bg-emerald-50 text-emerald-700 text-sm rounded px-3 py-2.5 mb-4">
+          Tu contraseña se actualizó. Inicia sesión con la nueva.
+        </div>
 
         <form (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
 
@@ -100,6 +104,11 @@
                 </span>
               </button>
             </div>
+          </div>
+          <div class="text-right -mt-2">
+            <a routerLink="/recuperar-password" class="text-xs font-medium text-ambar-600 hover:text-ambar-700">
+              ¿Olvidaste tu contraseña?
+            </a>
           </div>
 
           <button

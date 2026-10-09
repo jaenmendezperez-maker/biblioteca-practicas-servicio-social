@@ -21,7 +21,7 @@
           Volver al catálogo
         </a>
         <span *ngIf="entradas.length > 1" class="text-xs font-medium text-marino-700 bg-marino-50 px-3 py-1 rounded-full">
-          {{ entradas.length }} libros en esta sesión
+          {{ entradas.length }} artículos en esta sesión
         </span>
       </div>
     </header>
@@ -34,10 +34,10 @@
           Contribuir
         </p>
         <h1 class="font-display text-3xl md:text-4xl font-semibold text-marino-900 mb-3 tracking-tight">
-          Subir libros de prácticas
+          Subir artículos de prácticas
         </h1>
         <p class="text-[13px] text-gris-500 leading-relaxed">
-          Comparte material con la comunidad. Puedes agregar varios libros a la vez; cada uno se sube por separado.
+          Comparte material con la comunidad. Puedes agregar varios artículos a la vez; cada uno se sube por separado.
         </p>
       </div>
 
@@ -47,7 +47,7 @@
           <span class="material-symbols-outlined text-3xl text-emerald-600">check_circle</span>
         </div>
         <h2 class="font-display text-2xl font-semibold text-marino-900 mb-1">¡Listo!</h2>
-        <p class="text-sm text-marino-400">Todos los libros se subieron correctamente. Redirigiendo...</p>
+        <p class="text-sm text-marino-400">Todos los artículos se subieron correctamente. Redirigiendo...</p>
       </div>
 
       <!-- Layout de dos columnas -->
@@ -91,7 +91,7 @@
                     <span class="w-8 h-8 rounded-full bg-marino-700 text-white text-xs font-display font-semibold flex items-center justify-center shrink-0">
                       {{ i + 1 }}
                     </span>
-                    <span class="font-display text-base font-semibold text-marino-900">Libro {{ i + 1 }}</span>
+                    <span class="font-display text-base font-semibold text-marino-900">Artículo {{ i + 1 }}</span>
                   </div>
 
                   <div class="flex items-center gap-3">
@@ -112,7 +112,7 @@
                       *ngIf="entradas.length > 1 && !enviando"
                       (click)="quitarEntrada(entrada.id)"
                       class="text-marino-300 hover:text-red-500 transition-colors p-1"
-                      title="Quitar este libro"
+                      title="Quitar este artículo del listado"
                     >
                       <span class="material-symbols-outlined text-[18px]">close</span>
                     </button>
@@ -276,7 +276,7 @@
               class="cursor-pointer border-2 border-dashed border-gris-200 rounded-2xl py-4 text-sm font-semibold text-marino-500 hover:border-ambar-400 hover:text-ambar-600 hover:bg-ambar-500/5 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span class="material-symbols-outlined text-[20px]">add</span>
-              Agregar otro libro
+              Agregar otro artículo
             </button>
 
             <!-- Submit -->
@@ -286,7 +286,7 @@
               class="cursor-pointer w-full bg-marino-700 text-white font-semibold py-3.5 rounded-xl hover:bg-marino-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(27,58,107,0.25)] mt-2"
             >
               <span class="material-symbols-outlined text-[20px]" *ngIf="!enviando">upload</span>
-              {{ enviando ? 'Subiendo libros...' : 'Subir ' + entradas.length + (entradas.length === 1 ? ' libro' : ' libros') }}
+              {{ enviando ? 'Subiendo artículos...' : 'Subir ' + entradas.length + (entradas.length === 1 ? ' artículo' : ' artículos') }}
             </button>
           </form>
         </div>
@@ -303,7 +303,7 @@
               <p class="text-xs font-semibold text-ambar-300 uppercase tracking-wider mb-4">Resumen de la sesión</p>
               <div class="flex items-end gap-2 mb-1">
                 <span class="font-display text-4xl font-semibold">{{ entradas.length }}</span>
-                <span class="text-sm text-white/70 pb-1">libro{{ entradas.length !== 1 ? 's' : '' }} en cola</span>
+                <span class="text-sm text-white/70 pb-1">artículo{{ entradas.length !== 1 ? 's' : '' }} en cola</span>
               </div>
               <div class="mt-4 pt-4 border-t border-white/15 flex flex-col gap-2 text-sm">
                 <div class="flex items-center justify-between">

@@ -133,6 +133,11 @@ export class PanelAdminComponent implements OnInit {
     if (typeof rol === 'string') return rol;
     return NOMBRES_ROL[rol] ?? 'Desconocido';
   }
+  private mensajeError(err: any, porDefecto: string): string {
+    return err?.status === 400 && typeof err.error === 'string' && err.error
+      ? err.error
+      : porDefecto;
+  }
 
   // ===== Categorías =====
 
@@ -145,7 +150,7 @@ export class PanelAdminComponent implements OnInit {
         this.cargarTodo();
         this.toast.exito('Categoría creada correctamente.');
       },
-      error: () => this.toast.error('No se pudo crear la categoría.')
+      error: (err) => this.toast.error(this.mensajeError(err, 'No se pudo crear la categoría.'))
     });
   }
 
@@ -168,7 +173,7 @@ export class PanelAdminComponent implements OnInit {
         this.cargarTodo();
         this.toast.exito('Categoría actualizada correctamente.');
       },
-      error: () => this.toast.error('No se pudo editar la categoría.')
+      error: (err) => this.toast.error(this.mensajeError(err, 'No se pudo editar la categoría.'))
     });
   }
 
@@ -449,4 +454,5 @@ export class PanelAdminComponent implements OnInit {
   get totalPaginasLibros(): number {
     return Math.ceil(this.librosFiltrados.length / this.itemsPorPagina);
   }
+  
 }

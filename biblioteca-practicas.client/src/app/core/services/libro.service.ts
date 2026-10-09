@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { Libro } from '../models/libro.model';
+
 
 @Injectable({
   providedIn: 'root'
@@ -61,5 +62,53 @@ export class LibroService {
     const formData = new FormData();
     formData.append('archivo', archivo);
     return this.http.put<void>(`${this.apiUrl}/${id}/reemplazar-pdf`, formData);
+  }
+    private urlApiArchivo(ruta: string): string {
+    const partes = ruta.split('/').filter(p => p);
+    return `http://localhost:5250/api/archivos/${partes[1]}/${partes[2]}`;
+  }
+
+  verPdf(ruta: string): Observable<void> {
+    const ventana = window.open('', '_blank');
+    return this.http.get(this.urlApiArchivo(ruta), { responseType: 'blob' }).pipe(
+      tap((blob) => {
+        const url = URL.createObjectURL(blob);
+        if (ventana) ventana.location.href = url;
+        else window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }),
+      map(() => void 0),
+      catchError((err) => {
+        ventana?.close();
+        return throwError(() => err);
+      })
+    );
+  }
+
+  descargarPdf(ruta: string, nombre: string): Observable<void> {
+    return this.http.get(this.urlApiArchivo(ruta), { responseType: 'blob' }).pipe(
+      tap((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombre;
+        a.click();
+        URL.revokeObjectURL(url);
+      }),
+      map(() => void 0)
+    );
+  }
+    /** PDF parcial, público. Devuelve el archivo y cuántas páginas muestra de cuántas tiene. */
+  obtenerFragmento(ruta: string): Observable<{ blob: Blob; total: number; incluidas: number }> {
+    const partes = ruta.split('/').filter(p => p);
+    const url = `http://localhost:5250/api/archivos/libros/${partes[2]}/fragmento`;
+
+    return this.http.get(url, { responseType: 'blob', observe: 'response' }).pipe(
+      map((resp: HttpResponse<Blob>) => ({
+        blob: resp.body as Blob,
+        total: Number(resp.headers.get('X-Total-Paginas')) || 0,
+        incluidas: Number(resp.headers.get('X-Paginas-Fragmento')) || 0
+      }))
+    );
   }
 }

@@ -77,7 +77,7 @@
         class="flex items-center gap-4 p-3 rounded-lg transition-colors border-l-2 border-transparent text-marino-400 hover:bg-marino-50/60 hover:text-marino-700"
       >
         <span class="material-symbols-outlined text-[20px]">menu_book</span>
-        <span class="text-sm">Todos los libros</span>
+        <span class="text-sm">Todos los artículos</span>
       </a>
     </li>
     <li *ngIf="authService.usuarioActual()?.rol === 'Admin'">
@@ -88,7 +88,7 @@
         class="flex items-center gap-4 p-3 rounded-lg transition-colors border-l-2 border-transparent text-marino-400 hover:bg-marino-50/60 hover:text-marino-700"
       >
         <span class="material-symbols-outlined text-[20px]">upload_file</span>
-        <span class="text-sm">Subir libro</span>
+        <span class="text-sm">Subir artículo</span>
       </a>
     </li>
     <li *ngIf="authService.usuarioActual()?.rol === 'Admin'">

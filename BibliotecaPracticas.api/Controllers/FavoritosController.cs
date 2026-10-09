@@ -49,6 +49,9 @@ namespace BibliotecaPracticas.api.Controllers
         public async Task<IActionResult> AgregarFavorito(int libroId)
         {
             var usuarioId = ObtenerUsuarioId();
+            var libroExiste = await _context.Libros.AnyAsync(l => l.Id == libroId && l.Activo);
+            if (!libroExiste)
+                return NotFound();
 
             var yaExiste = await _context.Favoritos
                 .AnyAsync(f => f.UsuarioId == usuarioId && f.LibroId == libroId);
@@ -90,37 +93,15 @@ namespace BibliotecaPracticas.api.Controllers
         {
             var usuarioId = ObtenerUsuarioId();
 
-            var librosRaw = await _context.Favoritos
-                .Where(f => f.UsuarioId == usuarioId)
-                .Include(f => f.Libro)
-                .ThenInclude(l => l!.Categoria)
+            var libros = await _context.Favoritos
+                .Where(f => f.UsuarioId == usuarioId && f.Libro!.Activo)
                 .OrderByDescending(f => f.FechaAgregado)
-                .Select(f => f.Libro)
+                .Select(f => f.Libro!)
+                .Include(l => l.Categoria)
+                .Include(l => l.Semestres)
                 .ToListAsync();
 
-            var libros = librosRaw
-                .Where(l => l != null && l.Activo)
-                .Select(l => new LibroDTO
-                {
-                    Id = l!.Id,
-                    Titulo = l.Titulo,
-                    Autor = l.Autor,
-                    Descripcion = l.Descripcion,
-                    RutaArchivo = l.RutaArchivo,
-                    RutaPortada = l.RutaPortada,
-                    PaginasPreview = l.PaginasPreview != null
-                        ? System.Text.Json.JsonSerializer.Deserialize<List<string>>(l.PaginasPreview, _jsonOptions)
-                        : null,
-                    TablaContenido = l.TablaContenido != null
-                        ? System.Text.Json.JsonSerializer.Deserialize<List<ItemTablaContenidoDTO>>(l.TablaContenido, _jsonOptions)
-                        : null,
-                    FechaSubida = l.FechaSubida,
-                    CategoriaId = l.CategoriaId,
-                    CategoriaNombre = l.Categoria != null ? l.Categoria.Nombre : null,
-                    Activo = l.Activo
-                }).ToList();
-
-            return Ok(libros);
+            return Ok(libros.Select(LibroMapper.ToDto).ToList());
         }
     }
 }

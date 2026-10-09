@@ -4,6 +4,7 @@ using BibliotecaPracticas.api.Data;
 using BibliotecaPracticas.api.Models;
 using BibliotecaPracticas.api.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using BibliotecaPracticas.api.Services;
 
 namespace BibliotecaPracticas.api.Controllers
 {
@@ -12,15 +13,17 @@ namespace BibliotecaPracticas.api.Controllers
     public class UsuariosController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ICorreoService _correo;
 
-        public UsuariosController(AppDbContext context)
+        public UsuariosController(AppDbContext context, ICorreoService correo)
         {
             _context = context;
+            _correo = correo;
         }
 
         // GET: api/usuarios  (todos, incluye inactivos — solo para el panel de admin)
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Admin")] // Solo los administradores pueden ver la lista completa de usuarios
         public async Task<ActionResult<IEnumerable<UsuarioDTO>>> GetUsuarios()
         {
             var usuarios = await _context.Usuarios
@@ -40,7 +43,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // GET: api/usuarios/5
         [HttpGet("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<UsuarioDTO>> GetUsuario(int id)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
@@ -58,44 +61,68 @@ namespace BibliotecaPracticas.api.Controllers
                 Activo = usuario.Activo
             });
         }
-
-        // POST: api/usuarios  (registro público — siempre crea como Alumno)
-        [HttpPost]
-        public async Task<ActionResult<UsuarioDTO>> PostUsuario(UsuarioCreateDTO dto)
+        private static readonly string[] DominiosPermitidos =
         {
-            var existe = await _context.Usuarios.AnyAsync(u => u.Email == dto.Email);
-            if (existe)
-                return BadRequest("Ya existe un usuario con ese email.");
+            "alumno.buap.mx",
+            "correo.buap.mx",
+            "buap.mx"
+        };
+        // POST: api/usuarios  (registro público — crea como Alumno, pendiente de verificar)
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PostUsuario(UsuarioCreateDTO dto)
+        {
+            var email = dto.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+
+            var partes = email.Split('@');
+            if (partes.Length != 2
+                || partes[0].Length == 0
+                || !DominiosPermitidos.Contains(partes[1]))
+                return BadRequest("Solo se permiten correos institucionales de la BUAP (@alumno.buap.mx, @correo.buap.mx o @buap.mx).");
+
+            var existente = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            if (existente != null)
+            {
+                return BadRequest(existente.EmailVerificado
+                    ? "Ya existe un usuario con ese email."
+                    : "Este correo ya se registró pero falta verificarlo. Pide un nuevo código.");
+            }
+
+            var codigo = CodigoVerificacion.Generar();
 
             var usuario = new Usuario
             {
                 NombreCompleto = dto.NombreCompleto,
-                Email = dto.Email,
+                Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Rol = RolUsuario.Alumno, // Forzado: nadie puede auto-asignarse Admin/Docente
+                Rol = RolUsuario.Alumno,
                 FechaRegistro = DateTime.UtcNow,
-                Activo = true
+                Activo = true,
+                EmailVerificado = false,
+                CodigoVerificacionHash = BCrypt.Net.BCrypt.HashPassword(codigo),
+                CodigoExpira = DateTime.UtcNow.AddMinutes(10),
+                IntentosCodigo = 0,
+                UltimoEnvioCodigo = DateTime.UtcNow
             };
 
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
 
-            var result = new UsuarioDTO
+            try
             {
-                Id = usuario.Id,
-                NombreCompleto = usuario.NombreCompleto,
-                Email = usuario.Email,
-                Rol = usuario.Rol,
-                FechaRegistro = usuario.FechaRegistro,
-                Activo = usuario.Activo
-            };
+                await _correo.EnviarCodigoAsync(usuario.Email, usuario.NombreCompleto, codigo);
+            }
+            catch
+            {
+                return StatusCode(500, "Tu cuenta se creó, pero no se pudo enviar el correo. Pide un nuevo código en unos minutos.");
+            }
 
-            return CreatedAtAction(nameof(GetUsuario), new { id = usuario.Id }, result);
+            return Ok(new { email = usuario.Email, requiereVerificacion = true });
         }
 
         // PATCH: api/usuarios/5/rol
         [HttpPatch("{id}/rol")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CambiarRol(int id, UsuarioEditRolDTO dto)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
@@ -110,7 +137,7 @@ namespace BibliotecaPracticas.api.Controllers
 
         // PATCH: api/usuarios/5/estado
         [HttpPatch("{id}/estado")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool activo)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
